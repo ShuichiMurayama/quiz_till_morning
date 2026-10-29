@@ -339,9 +339,6 @@ async function FirebaseDB(cfg) {
     const off = auth.onAuthStateChanged(u => { off(); if (u) ok(u); else auth.signInAnonymously().then(c => ok(c.user), ng); });
   });
   const db = firebase.database();
-  // Connect lazily: just opening the top page never takes one of the
-  // plan's simultaneous connections; only creating/joining a room does.
-  db.goOffline();
   let offset = 0, awake = false, wired = false, presOff = null;
   const connCbs = [];
   function wake() {
@@ -351,6 +348,7 @@ async function FirebaseDB(cfg) {
     db.ref(".info/serverTimeOffset").on("value", s => { offset = s.val() || 0; });
     db.ref(".info/connected").on("value", s => connCbs.forEach(cb => cb(!!s.val())));
   }
+  wake();
   return {
     mode: "firebase", uid: user.uid,
     on(path, cb) { wake(); const r = db.ref(path); const h = s => cb(s.val()); r.on("value", h, e => console.warn("listen", path, e)); return () => r.off("value", h); },
@@ -577,7 +575,6 @@ function leaveRoom() {
   if (S.unsubRoom) S.unsubRoom(); if (S.unsubSecret) S.unsubSecret();
   if (S.room && S.data && S.data.players && S.data.players[S.uid]) S.db.set(`rooms/${S.room}/players/${S.uid}/online`, false);
   S.room = null; S.data = null; S.unsubRoom = null; S.unsubSecret = null; S.secretRound = null;
-  setTimeout(() => S.db.sleep(), 300);
   const u = new URL(location.href); u.searchParams.delete("r"); history.replaceState(null, "", u);
   closeModal(); render();
 }
@@ -729,8 +726,6 @@ function mount(k) {
       <div class="panel">
         <label class="lb">ニックネーム</label>
         <input class="tx" id="nm" maxlength="${MAX_NAME}" placeholder="例：たなか" value="${esc(S.name)}" autocomplete="off">
-        ${S.db.mode === "firebase" ? `<label class="lb">主催者の合言葉（部屋をつくる人だけ）</label>
-        <input class="tx" id="hk" type="password" autocomplete="off" value="${esc(localStorage.getItem("asamade-hostkey") || "")}">` : ""}
         <button class="btn gold big" data-act="create">部屋をつくる（主催者）</button>
         <div class="or">または参加</div>
         <div class="row"><input class="tx code-in" id="code" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters"><button class="btn" data-act="join-code" style="flex:.6">参加する</button></div>
@@ -1088,20 +1083,6 @@ const ACT = {
   async create() {
     const name = readName(); if (!name || S.ui.busy) return;
     const timeout = () => new Promise((_, ng) => setTimeout(() => ng(new Error("timeout")), 12000));
-    if (S.db.mode === "firebase") {
-      const k = ($("#hk") ? $("#hk").value : "").trim();
-      if (!k) { toast("主催者の合言葉を入れてください"); $("#hk") && $("#hk").focus(); return; }
-      S.ui.busy = true;
-      try {
-        // the database rules accept this write only when the key matches config/hostKey
-        await Promise.race([S.db.set(`hosts/${S.uid}`, k), timeout()]);
-        localStorage.setItem("asamade-hostkey", k);
-      } catch (e) {
-        S.ui.busy = false;
-        toast(/permission/i.test(String(e && (e.code || e.message))) ? "合言葉が違います" : "接続できませんでした。電波の入る場所で試してください");
-        return;
-      }
-    }
     S.ui.busy = true;
     try {
       let code;
