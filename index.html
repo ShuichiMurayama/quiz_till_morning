@@ -283,7 +283,7 @@ label.lb{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.06em}
 .toast{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%) translateY(120px);z-index:60;background:#fff;color:#1d1b26;font-weight:700;font-size:14px;border-radius:99px;padding:10px 18px;box-shadow:0 8px 24px rgba(0,0,0,.4);transition:transform .3s cubic-bezier(.2,1.4,.4,1);max-width:90vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .toast.show{transform:translateX(-50%) translateY(0)}
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:45}
-.net{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top));transform:translate(-50%,-140%);z-index:70;display:flex;align-items:center;gap:8px;
+.net{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top));transform:translate(-50%,calc(-100% - 60px));z-index:70;display:flex;align-items:center;gap:8px;
   background:#ff9b2f;color:#2a1400;font-weight:900;font-size:13px;border-radius:99px;padding:7px 14px;box-shadow:0 6px 20px rgba(0,0,0,.4);transition:transform .3s cubic-bezier(.2,1.4,.4,1);max-width:94vw;white-space:nowrap}
 .net.show{transform:translate(-50%,0)}
 .net.ok{background:var(--ok);color:#022b1a}
@@ -339,22 +339,34 @@ async function FirebaseDB(cfg) {
     const off = auth.onAuthStateChanged(u => { off(); if (u) ok(u); else auth.signInAnonymously().then(c => ok(c.user), ng); });
   });
   const db = firebase.database();
-  let offset = 0;
-  db.ref(".info/serverTimeOffset").on("value", s => { offset = s.val() || 0; });
+  // Connect lazily: just opening the top page never takes one of the
+  // plan's simultaneous connections; only creating/joining a room does.
+  db.goOffline();
+  let offset = 0, awake = false, wired = false, presOff = null;
+  const connCbs = [];
+  function wake() {
+    if (awake) return; awake = true;
+    db.goOnline();
+    if (wired) return; wired = true;
+    db.ref(".info/serverTimeOffset").on("value", s => { offset = s.val() || 0; });
+    db.ref(".info/connected").on("value", s => connCbs.forEach(cb => cb(!!s.val())));
+  }
   return {
     mode: "firebase", uid: user.uid,
-    on(path, cb) { const r = db.ref(path); const h = s => cb(s.val()); r.on("value", h, e => console.warn("listen", path, e)); return () => r.off("value", h); },
-    async get(path) { return (await db.ref(path).get()).val(); },
-    set(path, v) { return db.ref(path).set(v); },
-    update(path, o) { return db.ref(path).update(o); },
+    on(path, cb) { wake(); const r = db.ref(path); const h = s => cb(s.val()); r.on("value", h, e => console.warn("listen", path, e)); return () => r.off("value", h); },
+    async get(path) { wake(); return (await db.ref(path).get()).val(); },
+    set(path, v) { wake(); return db.ref(path).set(v); },
+    update(path, o) { wake(); return db.ref(path).update(o); },
     now() { return Date.now() + offset; },
-    onConnection(cb) { db.ref(".info/connected").on("value", s => cb(!!s.val())); },
+    onConnection(cb) { connCbs.push(cb); },
     presence(path) {
-      db.ref(".info/connected").on("value", s => {
-        if (!s.val()) return;
-        const r = db.ref(path); r.onDisconnect().set(false); r.set(true);
-      });
-    }
+      wake();
+      if (presOff) presOff();
+      const c = db.ref(".info/connected");
+      const h = s => { if (!s.val()) return; const r = db.ref(path); r.onDisconnect().set(false); r.set(true); };
+      c.on("value", h); presOff = () => c.off("value", h);
+    },
+    sleep() { if (presOff) { presOff(); presOff = null; } if (awake) { awake = false; db.goOffline(); } }
   };
 }
 
@@ -390,6 +402,7 @@ function LocalDB() {
     async update(path, o) { const d = load(); for (const k in o) setAt(d, path + "/" + k, o[k]); save(d); },
     now() { return Date.now(); },
     onConnection(cb) { setTimeout(() => cb(true), 0); },
+    sleep() { },
     presence(path) {
       const d = load(); setAt(d, path, true); save(d);
       window.addEventListener("pagehide", () => { const d2 = load(); if (getAt(d2, path) !== undefined) { setAt(d2, path, false); save(d2); } });
@@ -564,6 +577,7 @@ function leaveRoom() {
   if (S.unsubRoom) S.unsubRoom(); if (S.unsubSecret) S.unsubSecret();
   if (S.room && S.data && S.data.players && S.data.players[S.uid]) S.db.set(`rooms/${S.room}/players/${S.uid}/online`, false);
   S.room = null; S.data = null; S.unsubRoom = null; S.unsubSecret = null; S.secretRound = null;
+  setTimeout(() => S.db.sleep(), 300);
   const u = new URL(location.href); u.searchParams.delete("r"); history.replaceState(null, "", u);
   closeModal(); render();
 }
@@ -711,10 +725,12 @@ function mount(k) {
   if (b === "loading") { app.innerHTML = `<div class="center-msg"><div class="thinking"><i></i><i></i><i></i></div>読み込み中…</div>`; return; }
   if (b === "home") {
     app.innerHTML = `<div class="screen">
-      <div class="logo"><div class="pre">クイズ！</div><h1>朝まで<em>それ正解</em></h1><p>みんなの答えの中から、主催者が“正解”を決める</p></div>
+      <div class="logo"><div class="pre">クイズ！</div><h1>朝まで<em>それ正解</em></h1><p>頭文字つきのお題で、みんなの“正解”を決めよう</p></div>
       <div class="panel">
         <label class="lb">ニックネーム</label>
         <input class="tx" id="nm" maxlength="${MAX_NAME}" placeholder="例：たなか" value="${esc(S.name)}" autocomplete="off">
+        ${S.db.mode === "firebase" ? `<label class="lb">主催者の合言葉（部屋をつくる人だけ）</label>
+        <input class="tx" id="hk" type="password" autocomplete="off" value="${esc(localStorage.getItem("asamade-hostkey") || "")}">` : ""}
         <button class="btn gold big" data-act="create">部屋をつくる（主催者）</button>
         <div class="or">または参加</div>
         <div class="row"><input class="tx code-in" id="code" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters"><button class="btn" data-act="join-code" style="flex:.6">参加する</button></div>
@@ -1070,10 +1086,25 @@ async function submitAnswer(auto) {
 
 const ACT = {
   async create() {
-    const name = readName(); if (!name || S.ui.busy) return; S.ui.busy = true;
+    const name = readName(); if (!name || S.ui.busy) return;
+    const timeout = () => new Promise((_, ng) => setTimeout(() => ng(new Error("timeout")), 12000));
+    if (S.db.mode === "firebase") {
+      const k = ($("#hk") ? $("#hk").value : "").trim();
+      if (!k) { toast("主催者の合言葉を入れてください"); $("#hk") && $("#hk").focus(); return; }
+      S.ui.busy = true;
+      try {
+        // the database rules accept this write only when the key matches config/hostKey
+        await Promise.race([S.db.set(`hosts/${S.uid}`, k), timeout()]);
+        localStorage.setItem("asamade-hostkey", k);
+      } catch (e) {
+        S.ui.busy = false;
+        toast(/permission/i.test(String(e && (e.code || e.message))) ? "合言葉が違います" : "接続できませんでした。電波の入る場所で試してください");
+        return;
+      }
+    }
+    S.ui.busy = true;
     try {
       let code;
-      const timeout = () => new Promise((_, ng) => setTimeout(() => ng(new Error("timeout")), 12000));
       for (let i = 0; i < 12; i++) { code = genCode(); if (!(await Promise.race([S.db.get(`rooms/${code}/meta`), timeout()]))) break; }
       const now = S.db.now();
       await S.db.set(`rooms/${code}/meta`, { hostUid: S.uid, createdAt: now });

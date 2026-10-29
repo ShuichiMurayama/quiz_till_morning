@@ -4,7 +4,7 @@
       "$room": {
         ".read": "auth != null",
         "meta": {
-          ".write": "auth != null && (!data.exists() ? newData.child('hostUid').val() === auth.uid : data.child('hostUid').val() === auth.uid)"
+          ".write": "auth != null && (!data.exists() ? (newData.child('hostUid').val() === auth.uid && root.child('hosts/' + auth.uid).exists()) : data.child('hostUid').val() === auth.uid)"
         },
         "state": {
           ".write": "auth != null && root.child('rooms/' + $room + '/meta/hostUid').val() === auth.uid"
@@ -37,6 +37,11 @@
             }
           }
         }
+      }
+    },
+    "hosts": {
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid && root.child('config/hostKey').exists() && newData.val() === root.child('config/hostKey').val()"
       }
     },
     "secrets": {
