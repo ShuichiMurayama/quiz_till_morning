@@ -721,7 +721,9 @@ function mount(k) {
     return;
   }
   if (b === "missing") {
-    app.innerHTML = `<div class="center-msg"><div style="font-size:48px">🔍</div>部屋「${esc(S.room)}」が見つかりません。<br>コードを確認してください。<button class="btn" data-act="leave">トップへ戻る</button></div>`;
+    app.innerHTML = S.db.mode === "demo"
+      ? `<div class="center-msg"><div style="font-size:48px">🧪</div>部屋「${esc(S.room)}」が見つかりません。<div class="note demo-note">いまは<b>デモモード</b>（Firebase未設定）なので、<b>別のスマホやPCで作った部屋には入れません</b>。同じブラウザのタブ同士でのみ遊べます。<br>別々の端末で遊ぶには、SETUP.md の手順でFirebaseを設定してください。</div><button class="btn" data-act="leave">トップへ戻る</button></div>`
+      : `<div class="center-msg"><div style="font-size:48px">🔍</div>部屋「${esc(S.room)}」が見つかりません。<br>コードを確認してください。<button class="btn" data-act="leave">トップへ戻る</button></div>`;
     return;
   }
   if (b === "join") {
