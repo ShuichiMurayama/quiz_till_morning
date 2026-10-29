@@ -1,0 +1,54 @@
+{
+  "rules": {
+    "rooms": {
+      "$room": {
+        ".read": "auth != null",
+        "meta": {
+          ".write": "auth != null && (!data.exists() ? newData.child('hostUid').val() === auth.uid : data.child('hostUid').val() === auth.uid)"
+        },
+        "state": {
+          ".write": "auth != null && root.child('rooms/' + $room + '/meta/hostUid').val() === auth.uid"
+        },
+        "scores": {
+          ".write": "auth != null && root.child('rooms/' + $room + '/meta/hostUid').val() === auth.uid"
+        },
+        "history": {
+          ".write": "auth != null && root.child('rooms/' + $room + '/meta/hostUid').val() === auth.uid"
+        },
+        "revealReq": {
+          ".write": "auth != null && root.child('rooms/' + $room + '/meta/hostUid').val() === auth.uid"
+        },
+        "players": {
+          "$uid": {
+            ".write": "auth != null && (auth.uid === $uid || root.child('rooms/' + $room + '/meta/hostUid').val() === auth.uid)",
+            "name": { ".validate": "newData.isString() && newData.val().length <= 10" }
+          }
+        },
+        "submitted": {
+          "$round": {
+            "$uid": { ".write": "auth != null && auth.uid === $uid" }
+          }
+        },
+        "revealed": {
+          "$round": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid",
+              "text": { ".validate": "newData.isString() && newData.val().length <= 30" }
+            }
+          }
+        }
+      }
+    },
+    "secrets": {
+      "$room": {
+        "$round": {
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.isString() && newData.val().length <= 30"
+          }
+        }
+      }
+    }
+  }
+}

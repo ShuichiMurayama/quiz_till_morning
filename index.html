@@ -1,0 +1,1227 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1026">
+<title>朝までそれ正解</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Yusei+Magic&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<script>
+/* =====================================================================
+   Firebase の設定（SETUP.md 参照）
+   apiKey が空のままだと「デモモード」（同じブラウザのタブ同士でのみ同期）で動きます。
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "",
+  authDomain: "",
+  databaseURL: "",
+  projectId: "",
+  appId: ""
+};
+</script>
+<style>
+:root{
+  --bg1:#0b1026; --bg2:#18205a; --dawn:#ff9b6a;
+  --ink:#f6f2e8; --muted:#a3abd2; --line:rgba(255,255,255,.14); --glass:rgba(255,255,255,.07);
+  --gold:#ffc93c; --gold2:#ffb000; --red:#e8263f; --ok:#3ddc97;
+  --paper:#fffaf0; --paper-ink:#1d1b26;
+  --r:16px;
+  --f-ui:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --f-title:"Dela Gothic One","Hiragino Sans","Noto Sans JP",sans-serif;
+  --f-hand:"Yusei Magic","Zen Maru Gothic","Hiragino Maru Gothic ProN",sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none}
+body{
+  font-family:var(--f-ui);color:var(--ink);background:var(--bg1);
+  background:
+    radial-gradient(120% 60% at 50% 120%, rgba(255,155,106,.35), transparent 60%),
+    radial-gradient(80% 50% at 85% -10%, rgba(120,140,255,.25), transparent 60%),
+    linear-gradient(180deg,var(--bg1),var(--bg2));
+  -webkit-font-smoothing:antialiased;
+}
+body::before{ /* stars */
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.55;
+  background-image:
+    radial-gradient(1.2px 1.2px at 12% 18%,#fff,transparent),radial-gradient(1px 1px at 72% 9%,#fff,transparent),
+    radial-gradient(1.4px 1.4px at 38% 32%,#fff,transparent),radial-gradient(1px 1px at 88% 40%,#fff,transparent),
+    radial-gradient(1px 1px at 22% 55%,#fff,transparent),radial-gradient(1.2px 1.2px at 60% 22%,#fff,transparent),
+    radial-gradient(1px 1px at 5% 80%,#fff,transparent),radial-gradient(1px 1px at 95% 70%,#fff,transparent);
+}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;
+  padding:max(10px,env(safe-area-inset-top)) 14px max(12px,env(safe-area-inset-bottom));max-width:560px;margin:0 auto}
+.screen{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
+[hidden]{display:none!important}
+
+/* ---------- buttons ---------- */
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:0 16px;border-radius:14px;
+  background:var(--glass);border:1px solid var(--line);font-weight:700;font-size:15px;transition:transform .08s}
+.btn:active{transform:scale(.97)}
+.btn.gold{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#2a1a00;border:0;box-shadow:0 4px 0 #b37400,0 8px 20px rgba(255,180,0,.25)}
+.btn.gold:active{transform:translateY(3px);box-shadow:0 1px 0 #b37400}
+.btn.red{background:linear-gradient(180deg,#ff4d63,var(--red));color:#fff;border:0;box-shadow:0 4px 0 #9b1024}
+.btn.big{min-height:58px;font-size:19px;font-weight:900;letter-spacing:.04em}
+.btn.small{min-height:36px;font-size:13px;padding:0 12px;border-radius:11px}
+.btn.ghost{background:transparent}
+.btn[disabled]{opacity:.38;pointer-events:none}
+.row{display:flex;gap:8px}.row>*{flex:1}
+input.tx,textarea.tx{width:100%;background:rgba(0,0,0,.25);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;font-size:17px;outline:none}
+input.tx:focus,textarea.tx:focus{border-color:var(--gold)}
+textarea.tx{resize:none}
+label.lb{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.06em}
+
+/* ---------- header ---------- */
+.hdr{display:flex;align-items:center;gap:8px;flex:none}
+.hdr .room{font-size:12px;color:var(--muted);letter-spacing:.08em}
+.hdr .room b{font-family:var(--f-title);font-weight:400;color:var(--gold);font-size:17px;letter-spacing:.12em;margin-left:2px}
+.hdr .rnd{flex:1;text-align:center;font-family:var(--f-title);font-size:15px}
+.hdr .icons{display:flex;gap:4px}
+.icon{height:36px;min-width:36px;padding:0 8px;border-radius:11px;background:var(--glass);border:1px solid var(--line);font-size:15px;display:flex;align-items:center;gap:3px}
+.icon small{font-size:12px;font-weight:700}
+.demo{font-size:10px;font-weight:900;background:#7b5cff;color:#fff;border-radius:6px;padding:2px 5px;margin-left:4px}
+.mebar{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);flex:none;margin-top:-4px}
+.mebar b{color:var(--ink)}
+.tag{display:inline-block;font-size:10px;font-weight:900;padding:2px 6px;border-radius:6px;background:var(--gold);color:#2a1a00;margin-left:4px;vertical-align:1px}
+
+/* ---------- home ---------- */
+.logo{text-align:center;margin:auto 0 8px}
+.logo .pre{font-family:var(--f-title);color:var(--gold);font-size:18px;letter-spacing:.2em}
+.logo h1{font-family:var(--f-title);font-weight:400;font-size:clamp(44px,14vw,64px);line-height:1.02;margin:6px 0 10px;
+  background:linear-gradient(180deg,#fff 30%,#ffd98a);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 3px 0 rgba(0,0,0,.35))}
+.logo h1 em{font-style:normal;display:block;font-size:.62em;background:linear-gradient(180deg,var(--gold),#ff7a3d);-webkit-background-clip:text;background-clip:text}
+.logo p{margin:0;color:var(--muted);font-size:13px}
+.panel{background:rgba(10,14,40,.55);border:1px solid var(--line);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:10px;margin-bottom:auto;backdrop-filter:blur(6px)}
+.or{text-align:center;color:var(--muted);font-size:12px;display:flex;align-items:center;gap:10px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.code-in{text-transform:uppercase;letter-spacing:.3em;text-align:center;font-family:var(--f-title)}
+.note{font-size:12px;color:var(--muted);line-height:1.6;text-align:center}
+.note.demo-note{background:rgba(123,92,255,.15);border:1px dashed rgba(123,92,255,.6);border-radius:12px;padding:8px 10px;text-align:left}
+
+/* ---------- cards ---------- */
+.card{background:var(--glass);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.odai{background:linear-gradient(180deg,#232c78,#1a2160);border:1.5px solid rgba(255,201,60,.45);border-radius:18px;padding:14px 16px;position:relative;box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.odai .q{font-family:var(--f-title);font-size:12px;color:var(--gold);letter-spacing:.15em}
+.odai .t{font-weight:900;font-size:clamp(19px,5.6vw,25px);line-height:1.35;margin-top:4px;word-break:break-word}
+.odai.mini{padding:8px 12px;border-radius:14px}
+.odai.mini .t{font-size:15px;margin-top:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.letter{display:inline-flex;align-items:center;justify-content:center;flex:none;width:58px;height:58px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#ff5b70,var(--red));color:#fff;font-family:var(--f-title);font-size:34px;line-height:1;
+  box-shadow:0 4px 0 #8e0f22,0 6px 16px rgba(232,38,63,.4);border:2px solid #fff}
+.letter.none{background:rgba(255,255,255,.12);font-size:13px;font-family:var(--f-ui);font-weight:900;border-color:var(--line);box-shadow:none}
+.letter.sm{width:30px;height:30px;font-size:17px;border-width:1.5px;box-shadow:0 2px 0 #8e0f22}
+.lt-row{display:flex;align-items:center;gap:10px}
+.lt-row .de{font-weight:900;font-size:17px}
+.odai .lt-row+.t{margin-top:8px}
+.odai.mini{display:flex;align-items:center;gap:8px}
+.odai.mini .de{font-size:13px;font-weight:900;flex:none}
+.odai.mini .t{flex:1;min-width:0}
+.kgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.kgrid button{height:44px;border-radius:10px;background:var(--glass);border:1px solid var(--line);font-family:var(--f-title);font-size:20px}
+.kgrid button.on{background:var(--red);border-color:var(--red)}
+.kgrid button.blank{visibility:hidden}
+.warn{font-size:12px;font-weight:700;color:#ffb35c;text-align:center}
+.cat{display:inline-block;font-size:11px;font-weight:700;color:var(--gold);border:1px solid rgba(255,201,60,.5);border-radius:99px;padding:1px 8px}
+
+/* ---------- lobby ---------- */
+.seg{display:flex;background:rgba(0,0,0,.25);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;height:34px;border-radius:9px;font-weight:700;font-size:13px;color:var(--muted)}
+.seg button.on{background:var(--ink);color:var(--bg1)}
+.pick{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
+.pick .odai{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0}
+.pick textarea{flex:1;min-height:90px}
+.set{display:flex;flex-direction:column;gap:6px;flex:none}
+.set-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:700}
+.chips{display:flex;gap:4px}
+.dur-in{display:flex;align-items:center;gap:6px}
+.dur-in input{width:84px;height:38px;border-radius:10px;background:rgba(0,0,0,.25);border:1.5px solid var(--line);text-align:right;padding:0 10px;font-family:var(--f-title);font-size:20px;outline:none}
+.dur-in input:focus{border-color:var(--gold)}
+.chips button{height:32px;min-width:46px;padding:0 8px;border-radius:9px;background:var(--glass);border:1px solid var(--line);font-weight:700;font-size:13px}
+.chips button.on{background:var(--gold);color:#2a1a00;border-color:var(--gold)}
+.tgl{width:50px;height:30px;border-radius:99px;background:rgba(255,255,255,.18);position:relative;transition:background .2s;flex:none}
+.tgl::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s}
+.tgl.on{background:var(--ok)}.tgl.on::after{transform:translateX(20px)}
+.pstrip{display:flex;align-items:center;gap:8px;flex:none;background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:8px 10px;min-height:48px}
+.pstrip .cnt{font-family:var(--f-title);font-size:20px;color:var(--gold);flex:none}
+.pstrip .cnt small{font-family:var(--f-ui);font-size:11px;color:var(--muted);font-weight:700;margin-left:2px}
+.pstrip .names{flex:1;min-width:0;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wait{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px}
+.wait .moon{font-size:58px;animation:float 3s ease-in-out infinite}
+.wait h2{font-family:var(--f-title);font-weight:400;font-size:22px;margin:4px 0 0}
+.wait p{margin:0;color:var(--muted);font-size:13px}
+@keyframes float{50%{transform:translateY(-8px)}}
+.last{font-size:12px;color:var(--muted);text-align:center}
+.last b{color:var(--gold);font-family:var(--f-hand);font-size:16px;font-weight:400}
+
+/* ---------- timer ---------- */
+.timer{display:flex;align-items:center;gap:10px;flex:none}
+.timer .bar{flex:1;height:12px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}
+.timer .bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--ok),var(--gold));border-radius:99px;transform-origin:left;transition:transform .25s linear}
+.timer .sec{font-family:var(--f-title);font-size:30px;min-width:56px;text-align:right;font-variant-numeric:tabular-nums}
+.timer.hurry .bar i{background:var(--red)}
+.timer.hurry .sec{color:#ff5a70;animation:pulse .5s ease-in-out infinite alternate}
+.timer.over .sec{color:var(--muted);font-size:16px}
+@keyframes pulse{to{transform:scale(1.12)}}
+
+/* ---------- answering ---------- */
+.ans{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px}
+.ans textarea{flex:1;min-height:80px;max-height:160px;font-family:var(--f-hand);font-size:24px;background:var(--paper);color:var(--paper-ink);border:0;border-radius:14px;padding:14px;outline:3px solid transparent}
+.ans textarea:focus{outline-color:var(--gold)}
+.hint{font-size:11px;color:var(--muted);text-align:center}
+.done{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}
+.done .ok{font-weight:900;color:var(--ok);font-size:15px}
+.progress{flex:none;display:flex;flex-direction:column;gap:6px}
+.progress .lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-weight:700}
+.progress .lbl b{color:var(--ink);font-size:14px}
+.dots{display:flex;flex-wrap:wrap;gap:4px;max-height:52px;overflow:hidden}
+.dots span{font-size:11px;padding:3px 8px;border-radius:99px;background:rgba(255,255,255,.08);color:var(--muted);white-space:nowrap}
+.dots span.y{background:rgba(61,220,151,.18);color:var(--ok)}
+.hostbar{flex:none;display:flex;gap:8px}
+.hostbar>*{flex:1}
+
+/* ---------- flips (answer boards) ---------- */
+.flip{position:relative;background:var(--paper);color:var(--paper-ink);border-radius:12px;padding:6px 8px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-width:0;min-height:0;overflow:hidden;
+  box-shadow:0 3px 0 #c9bfa6,0 6px 14px rgba(0,0,0,.25);border:2px solid transparent;transition:transform .15s,border-color .15s}
+.flip .ft{font-family:var(--f-hand);font-size:var(--fs,22px);line-height:1.15;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.flip .fc{position:absolute;top:4px;right:5px;background:var(--red);color:#fff;font-weight:900;font-size:12px;border-radius:99px;padding:1px 7px;min-width:24px}
+.flip .fn{font-size:10px;color:#6b6475;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.board.compact .flip .fn{display:none}
+.flip.mine{outline:3px solid var(--ok);outline-offset:-2px}
+.flip.sel{border-color:var(--red);transform:scale(1.03);box-shadow:0 0 0 4px rgba(232,38,63,.35),0 6px 14px rgba(0,0,0,.25)}
+.flip.new{animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.flip.bump .fc{animation:bump .5s}
+@keyframes pop{from{transform:scale(.3) rotate(-8deg);opacity:0}}
+@keyframes bump{40%{transform:scale(1.6)}}
+.board{flex:1;min-height:0;display:grid;gap:8px;align-content:center}
+.board-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;text-align:center;border:2px dashed var(--line);border-radius:16px}
+.bstat{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);font-weight:700;flex:none}
+.bstat b{color:var(--ink);font-size:15px}
+.dock{flex:none;display:flex;flex-direction:column;gap:8px;background:rgba(6,9,30,.6);border:1px solid var(--line);border-radius:18px;padding:10px}
+.dock .mine-line{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.dock .mine-line .flip{flex:1;padding:6px 10px}
+.dock .mine-line .flip .ft{font-size:20px}
+.dock .msg{font-size:13px;text-align:center;color:var(--muted);line-height:1.5}
+.dock .msg b{color:var(--ink)}
+.nom{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.nom::-webkit-scrollbar{display:none}
+.nom button{flex:none;height:34px;padding:0 12px;border-radius:99px;background:var(--glass);border:1px solid var(--line);font-size:13px;font-weight:700}
+.nom button.req{border-color:var(--gold);color:var(--gold);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.5}}
+.thinking{display:inline-flex;gap:4px;margin-left:4px}
+.thinking i{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:dot 1s infinite}
+.thinking i:nth-child(2){animation-delay:.15s}.thinking i:nth-child(3){animation-delay:.3s}
+@keyframes dot{50%{transform:translateY(-5px);opacity:.4}}
+
+/* ---------- result ---------- */
+.res{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center}
+.drum{font-family:var(--f-title);font-size:34px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.drum .ds{display:flex;gap:14px}
+.drum .ds i{width:16px;height:16px;border-radius:50%;background:var(--gold);animation:dot .5s infinite}
+.drum .ds i:nth-child(2){animation-delay:.1s}.drum .ds i:nth-child(3){animation-delay:.2s}
+.drum.shake{animation:shake .12s infinite}
+@keyframes shake{25%{transform:translate(2px,-1px)}75%{transform:translate(-2px,1px)}}
+.win-flip{overflow:visible;width:100%;min-height:150px;padding:22px 16px;border-radius:18px;--fs:clamp(30px,10vw,46px);animation:pop .6s cubic-bezier(.2,1.6,.4,1)}
+.win-flip .ft{-webkit-line-clamp:3}
+.stamp{position:absolute;right:-8px;top:-22px;width:80px;height:80px;border-radius:50%;border:6px solid var(--red);color:var(--red);
+  font-family:var(--f-title);font-size:24px;display:flex;align-items:center;justify-content:center;transform:rotate(-14deg);opacity:.9;
+  animation:stamp .45s .35s cubic-bezier(.3,1.8,.5,1) both;background:rgba(255,255,255,.4)}
+@keyframes stamp{from{transform:rotate(-14deg) scale(3);opacity:0}}
+.winners{font-size:14px;color:var(--muted);line-height:1.6}
+.winners b{color:var(--ink)}
+.pt{display:inline-block;background:var(--gold);color:#2a1a00;font-weight:900;border-radius:8px;padding:1px 8px;margin-left:4px}
+.myres{font-family:var(--f-title);font-size:26px}
+.myres.yes{color:var(--gold);animation:pulse .6s ease-in-out infinite alternate}
+.myres.no{color:var(--muted);font-size:18px}
+.none-x{font-family:var(--f-title);font-size:40px;color:var(--muted)}
+.minirank{width:100%;display:flex;flex-direction:column;gap:4px}
+.rk{display:flex;align-items:center;gap:10px;background:var(--glass);border:1px solid var(--line);border-radius:12px;padding:6px 12px;font-size:14px;font-weight:700}
+.rk .n{font-family:var(--f-title);width:26px;color:var(--gold)}
+.rk .nm{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rk .sc{font-family:var(--f-title);font-size:17px}
+.rk.me{border-color:var(--ok)}
+.fade-in{animation:fadein .5s both}
+@keyframes fadein{from{opacity:0;transform:translateY(10px)}}
+
+/* ---------- final ---------- */
+.podium{--ph:clamp(100px,24dvh,190px);display:flex;align-items:flex-end;justify-content:center;gap:8px;width:100%;margin-top:auto}
+.pod{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;opacity:0;transform:translateY(30px);transition:all .6s cubic-bezier(.2,1.4,.4,1)}
+.pod.show{opacity:1;transform:none}
+.pod .who{font-weight:900;font-size:14px;max-width:100%;line-height:1.3;word-break:break-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pod .sc{font-size:12px;color:var(--muted)}
+.pod .col{width:100%;border-radius:12px 12px 4px 4px;display:flex;align-items:flex-start;justify-content:center;padding-top:8px;font-family:var(--f-title);font-size:26px;color:#2a1a00}
+.pod.p1 .col{height:var(--ph);background:linear-gradient(180deg,#ffe27a,#ffb000)}
+.pod.p2 .col{height:calc(var(--ph)*.72);background:linear-gradient(180deg,#eef1ff,#a9b2d6)}
+.pod.p3 .col{height:calc(var(--ph)*.52);background:linear-gradient(180deg,#ffc79b,#c97a3c)}
+.pod .crown{font-size:30px}
+.final-h{font-family:var(--f-title);font-size:26px;color:var(--gold)}
+
+/* ---------- overlays ---------- */
+.ovl{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(3,5,20,.72);backdrop-filter:blur(4px);animation:fadein .2s}
+.modal{width:100%;max-width:420px;max-height:88dvh;display:flex;flex-direction:column;gap:12px;background:linear-gradient(180deg,#1f276c,#141a4d);border:1px solid var(--line);border-radius:22px;padding:18px}
+.modal h3{margin:0;font-family:var(--f-title);font-weight:400;font-size:20px;text-align:center}
+.modal .scroll{overflow-y:auto;min-height:0;display:flex;flex-direction:column;gap:6px}
+.qr{background:#fff;border-radius:16px;padding:12px;width:min(62vw,240px);aspect-ratio:1;margin:0 auto;display:flex;align-items:center;justify-content:center}
+.qr svg{width:100%;height:100%}
+.url{font-size:11px;color:var(--muted);text-align:center;word-break:break-all}
+.bigcode{font-family:var(--f-title);font-size:36px;letter-spacing:.25em;text-align:center;color:var(--gold)}
+.plist{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:10px;background:var(--glass);font-size:14px}
+.plist .st{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none}
+.plist .st.off{background:#666}
+.plist span.n{flex:1}
+.plist button{font-size:11px;color:#ff8a9a;padding:4px 8px}
+.flash{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;pointer-events:none;background:rgba(3,5,20,.55);opacity:0;transition:opacity .2s}
+.flash.show{opacity:1}
+.flash .who{font-weight:900;font-size:16px;background:var(--gold);color:#2a1a00;border-radius:99px;padding:4px 14px}
+.flash .flip{width:min(86vw,420px);min-height:130px;--fs:clamp(30px,10vw,44px)}
+.flash.show .flip{animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.toast{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%) translateY(120px);z-index:60;background:#fff;color:#1d1b26;font-weight:700;font-size:14px;border-radius:99px;padding:10px 18px;box-shadow:0 8px 24px rgba(0,0,0,.4);transition:transform .3s cubic-bezier(.2,1.4,.4,1);max-width:90vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toast.show{transform:translateX(-50%) translateY(0)}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:45}
+.net{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top));transform:translate(-50%,-140%);z-index:70;display:flex;align-items:center;gap:8px;
+  background:#ff9b2f;color:#2a1400;font-weight:900;font-size:13px;border-radius:99px;padding:7px 14px;box-shadow:0 6px 20px rgba(0,0,0,.4);transition:transform .3s cubic-bezier(.2,1.4,.4,1);max-width:94vw;white-space:nowrap}
+.net.show{transform:translate(-50%,0)}
+.net.ok{background:var(--ok);color:#022b1a}
+.net i{width:8px;height:8px;border-radius:50%;background:currentColor;animation:blink 1s infinite}
+.pend{font-size:12px;font-weight:700;color:#ffb35c;text-align:center}
+.center-msg{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;text-align:center;color:var(--muted)}
+@media (max-height:640px){
+  .odai .t{font-size:18px}.btn.big{min-height:50px;font-size:17px}.timer .sec{font-size:24px}
+  .logo h1{font-size:40px}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="flash" class="flash"></div>
+<div id="toast" class="toast"></div>
+<canvas id="confetti"></canvas>
+<div id="net" class="net" role="status"></div>
+<div id="modal-root"></div>
+
+<script type="application/json" id="odai-data">{"_説明":"お題は「頭文字」×「テーマ」で作られます。例：『あ』で始まる、モテる男の条件は？ 正解が一つに決まらず、議論で派閥ができるテーマを集めています。letters は出題に使う頭文字、themes の text は頭文字の後ろに続く部分です。","letters":"あいうえおかきくけこさしすせそたちつてとなにねのはひふへほまみむめもやゆよらりれろわ","themes":[{"id":1,"cat":"恋愛","text":"モテる男の条件は？"},{"id":2,"cat":"恋愛","text":"モテる女の条件は？"},{"id":3,"cat":"恋愛","text":"結婚相手に絶対ゆずれない条件は？"},{"id":4,"cat":"恋愛","text":"デートで一気に冷める瞬間は？"},{"id":5,"cat":"恋愛","text":"異性にされたらキュンとすることは？"},{"id":6,"cat":"恋愛","text":"異性の第一印象で一番見るところは？"},{"id":7,"cat":"恋愛","text":"初デートで行くべき場所は？"},{"id":8,"cat":"恋愛","text":"夫婦円満の秘訣は？"},{"id":9,"cat":"恋愛","text":"恋人の浮気を疑う瞬間は？"},{"id":10,"cat":"恋愛","text":"一緒に住んでイラッとすることは？"},{"id":11,"cat":"恋愛","text":"男が持っていたらダサいものは？"},{"id":12,"cat":"恋愛","text":"女性がカラオケで歌うと可愛く見える曲は？"},{"id":13,"cat":"恋愛","text":"男性がカラオケで歌うとかっこいい曲は？"},{"id":14,"cat":"恋愛","text":"異性からもらって一番嬉しいプレゼントは？"},{"id":15,"cat":"恋愛","text":"「この人いい人だな」と思う瞬間は？"},{"id":30,"cat":"仕事","text":"部下に慕われる上司の条件は？"},{"id":31,"cat":"仕事","text":"出世する人の特徴は？"},{"id":32,"cat":"仕事","text":"仕事ができる人が必ずやっていることは？"},{"id":33,"cat":"仕事","text":"会社を辞めたくなる瞬間は？"},{"id":34,"cat":"仕事","text":"上司に言われて一番イラッとする言葉は？"},{"id":35,"cat":"仕事","text":"新入社員にまず教えるべきことは？"},{"id":36,"cat":"仕事","text":"飲み会にいると困る人は？"},{"id":37,"cat":"仕事","text":"職場で絶対に言ってはいけない言葉は？"},{"id":38,"cat":"仕事","text":"上司にしたい有名人は？"},{"id":39,"cat":"仕事","text":"社長になったら最初にやることは？"},{"id":40,"cat":"仕事","text":"「この人とは働きたくない」と思う特徴は？"},{"id":41,"cat":"仕事","text":"会社にあったら最高な福利厚生は？"},{"id":42,"cat":"仕事","text":"ボーナスで買うべきものは？"},{"id":43,"cat":"仕事","text":"ムダだと思う会社のルールは？"},{"id":44,"cat":"仕事","text":"仕事中にこっそりやってしまうことは？"},{"id":45,"cat":"仕事","text":"できる上司の口ぐせは？"},{"id":60,"cat":"食","text":"最強のご飯のお供は？"},{"id":61,"cat":"食","text":"最強のお酒のおつまみは？"},{"id":62,"cat":"食","text":"鍋に絶対入れるべき具は？"},{"id":63,"cat":"食","text":"最後の晩餐に食べたいものは？"},{"id":64,"cat":"食","text":"二日酔いに一番効くものは？"},{"id":65,"cat":"食","text":"日本一うまいご当地グルメは？"},{"id":66,"cat":"食","text":"コンビニで一番うまいものは？"},{"id":67,"cat":"食","text":"外国人に自慢したい日本の食べ物は？"},{"id":68,"cat":"食","text":"居酒屋で最初に頼むべきものは？"},{"id":69,"cat":"食","text":"焼肉で一番うまいものは？"},{"id":70,"cat":"食","text":"〆に一番ふさわしいものは？"},{"id":71,"cat":"食","text":"食べ放題で元が取れるものは？"},{"id":72,"cat":"食","text":"正直、過大評価されている食べ物は？"},{"id":73,"cat":"食","text":"一番テンションが上がる給食メニューは？"},{"id":74,"cat":"食","text":"冬に一番うまいものは？"},{"id":75,"cat":"食","text":"カレーに入れたら最高の具は？"},{"id":76,"cat":"食","text":"疲れたときに一番食べたいものは？"},{"id":77,"cat":"食","text":"子どもが嫌いな食べ物の代表は？"},{"id":90,"cat":"人生","text":"人生で一番大切なものは？"},{"id":91,"cat":"人生","text":"お金で買えない大切なものは？"},{"id":92,"cat":"人生","text":"大人になったなと感じる瞬間は？"},{"id":93,"cat":"人生","text":"歳をとったなと感じる瞬間は？"},{"id":94,"cat":"人生","text":"一番幸せを感じる瞬間は？"},{"id":95,"cat":"人生","text":"宝くじで1億円当たったら最初にすることは？"},{"id":96,"cat":"人生","text":"無人島に一つだけ持っていくなら？"},{"id":97,"cat":"人生","text":"子どもに習わせたい習い事は？"},{"id":98,"cat":"人生","text":"一番面倒な家事は？"},{"id":99,"cat":"人生","text":"なくなったら一番困るものは？"},{"id":100,"cat":"人生","text":"正直、世の中になくてもいいものは？"},{"id":101,"cat":"人生","text":"人類最高の発明品は？"},{"id":102,"cat":"人生","text":"一番のストレス解消法は？"},{"id":103,"cat":"人生","text":"最高の休日の過ごし方は？"},{"id":104,"cat":"人生","text":"一人暮らしに絶対必要なものは？"},{"id":105,"cat":"人生","text":"冬の朝、布団から出られない理由は？"},{"id":106,"cat":"人生","text":"生まれ変わったらなりたいものは？"},{"id":107,"cat":"人生","text":"子どもになってほしい職業は？"},{"id":108,"cat":"人生","text":"一番かっこいい職業は？"},{"id":109,"cat":"人生","text":"「この人お金持ちだな」と思う瞬間は？"},{"id":120,"cat":"ランキング","text":"日本一住みやすい街は？"},{"id":121,"cat":"ランキング","text":"日本一の観光地は？"},{"id":122,"cat":"ランキング","text":"日本一かっこいい有名人は？"},{"id":123,"cat":"ランキング","text":"日本一かわいい有名人は？"},{"id":124,"cat":"ランキング","text":"日本の歴史上で一番すごい人物は？"},{"id":125,"cat":"ランキング","text":"一番強い動物は？"},{"id":126,"cat":"ランキング","text":"一番かわいい動物は？"},{"id":127,"cat":"ランキング","text":"この世で一番怖いものは？"},{"id":128,"cat":"ランキング","text":"一番泣ける映画やドラマは？"},{"id":129,"cat":"ランキング","text":"史上最高のアニメ・漫画は？"},{"id":130,"cat":"ランキング","text":"カラオケで一番盛り上がる曲は？"},{"id":131,"cat":"ランキング","text":"一番モテるスポーツは？"},{"id":132,"cat":"ランキング","text":"見ていて一番熱くなるスポーツは？"},{"id":133,"cat":"ランキング","text":"最強の家電は？"},{"id":134,"cat":"ランキング","text":"一番楽しかった学校行事は？"},{"id":135,"cat":"ランキング","text":"子どもの頃の最強の遊びは？"},{"id":136,"cat":"ランキング","text":"日本の一番いいところは？"},{"id":137,"cat":"ランキング","text":"一度は行くべき海外旅行先は？"},{"id":150,"cat":"年末","text":"忘年会のビンゴで一番うれしい景品は？"},{"id":151,"cat":"年末","text":"宴会芸で一番ウケるものは？"},{"id":152,"cat":"年末","text":"大掃除で一番捨てたいものは？"},{"id":153,"cat":"年末","text":"年末年始の一番の楽しみは？"},{"id":154,"cat":"年末","text":"クリスマスに一番欲しいものは？"},{"id":155,"cat":"年末","text":"おせちで一番いらないものは？"},{"id":156,"cat":"年末","text":"今年一番流行ったものは？"},{"id":157,"cat":"年末","text":"来年こそやめたいことは？"},{"id":158,"cat":"年末","text":"自分へのご褒美に一番いいものは？"},{"id":159,"cat":"年末","text":"お正月に一番やりたいことは？"}]}</script>
+<script>
+"use strict";
+/* =====================================================================
+   Utilities
+   ===================================================================== */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const clone = v => v == null ? v : JSON.parse(JSON.stringify(v));
+const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const genCode = () => Array.from({ length: 4 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join("");
+const MAX_ANS = 30, MAX_NAME = 10;
+const DEFAULT_LETTERS = "あいうえおかきくけこさしすせそたちつてとなにねのはひふへほまみむめもやゆよらりれろわ";
+const GOJUON = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもや　ゆ　よらりるれろわ　　　を";
+
+function loadScript(src) {
+  return new Promise((ok, ng) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => ng(new Error("load " + src)); document.head.appendChild(s); });
+}
+
+/* =====================================================================
+   Transport layer — Firebase Realtime Database or local demo
+   Interface: uid, mode, on(path,cb)->unsub, get(path), set(path,v), update(path,obj), now(), presence(path)
+   ===================================================================== */
+async function FirebaseDB(cfg) {
+  const V = "10.12.2";
+  await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-app-compat.js`);
+  await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-auth-compat.js`);
+  await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-database-compat.js`);
+  firebase.initializeApp(cfg);
+  const auth = firebase.auth();
+  const user = await new Promise((ok, ng) => {
+    const off = auth.onAuthStateChanged(u => { off(); if (u) ok(u); else auth.signInAnonymously().then(c => ok(c.user), ng); });
+  });
+  const db = firebase.database();
+  let offset = 0;
+  db.ref(".info/serverTimeOffset").on("value", s => { offset = s.val() || 0; });
+  return {
+    mode: "firebase", uid: user.uid,
+    on(path, cb) { const r = db.ref(path); const h = s => cb(s.val()); r.on("value", h, e => console.warn("listen", path, e)); return () => r.off("value", h); },
+    async get(path) { return (await db.ref(path).get()).val(); },
+    set(path, v) { return db.ref(path).set(v); },
+    update(path, o) { return db.ref(path).update(o); },
+    now() { return Date.now() + offset; },
+    onConnection(cb) { db.ref(".info/connected").on("value", s => cb(!!s.val())); },
+    presence(path) {
+      db.ref(".info/connected").on("value", s => {
+        if (!s.val()) return;
+        const r = db.ref(path); r.onDisconnect().set(false); r.set(true);
+      });
+    }
+  };
+}
+
+function LocalDB() {
+  const KEY = "asamade-demo-db";
+  const ch = ("BroadcastChannel" in window) ? new BroadcastChannel("asamade-demo") : null;
+  let uid = sessionStorage.getItem("asamade-demo-uid");
+  if (!uid) { uid = "u" + Math.random().toString(36).slice(2, 10); sessionStorage.setItem("asamade-demo-uid", uid); }
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
+  const keys = p => p.split("/").filter(Boolean);
+  const getAt = (o, p) => keys(p).reduce((x, k) => (x == null ? undefined : x[k]), o);
+  function setAt(o, p, v) {
+    const ks = keys(p); let x = o;
+    for (let i = 0; i < ks.length - 1; i++) { if (typeof x[ks[i]] !== "object" || x[ks[i]] === null) x[ks[i]] = {}; x = x[ks[i]]; }
+    if (v === null || v === undefined) delete x[ks[ks.length - 1]]; else x[ks[ks.length - 1]] = clone(v);
+  }
+  const listeners = new Set();
+  function notify() {
+    const d = load();
+    for (const l of listeners) {
+      const v = getAt(d, l.path); const j = JSON.stringify(v ?? null);
+      if (j !== l.last) { l.last = j; l.cb(v == null ? null : clone(v)); }
+    }
+  }
+  function save(d) { localStorage.setItem(KEY, JSON.stringify(d)); ch && ch.postMessage(1); notify(); }
+  if (ch) ch.onmessage = notify;
+  window.addEventListener("storage", e => { if (e.key === KEY) notify(); });
+  return {
+    mode: "demo", uid,
+    on(path, cb) { const l = { path, cb, last: undefined }; listeners.add(l); setTimeout(notify, 0); return () => listeners.delete(l); },
+    async get(path) { const v = getAt(load(), path); return v == null ? null : clone(v); },
+    async set(path, v) { const d = load(); setAt(d, path, v); save(d); },
+    async update(path, o) { const d = load(); for (const k in o) setAt(d, path + "/" + k, o[k]); save(d); },
+    now() { return Date.now(); },
+    onConnection(cb) { setTimeout(() => cb(true), 0); },
+    presence(path) {
+      const d = load(); setAt(d, path, true); save(d);
+      window.addEventListener("pagehide", () => { const d2 = load(); if (getAt(d2, path) !== undefined) { setAt(d2, path, false); save(d2); } });
+    }
+  };
+}
+
+/* =====================================================================
+   Sound
+   ===================================================================== */
+let AC = null;
+function ac() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch { } } if (AC && AC.state === "suspended") AC.resume(); return AC; }
+function tone(f, dur, type = "sine", vol = .15, when = 0) {
+  if (!S.sound) return; const a = ac(); if (!a) return;
+  const t = a.currentTime + when, o = a.createOscillator(), g = a.createGain();
+  o.type = type; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + .05);
+}
+const SFX = {
+  tick: () => tone(1000, .05, "square", .05),
+  pop: () => { tone(520, .09, "triangle", .16); tone(800, .14, "triangle", .14, .07); },
+  same: () => { tone(700, .08, "triangle", .14); tone(940, .1, "triangle", .12, .06); },
+  start: () => [392, 523, 659].forEach((f, i) => tone(f, .18, "triangle", .14, i * .1)),
+  drum: () => { for (let i = 0; i < 38; i++) tone(70 + Math.random() * 40, .05, "triangle", .06 + i * .004, i * .065); },
+  ding: () => { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, .45, "triangle", .14, i * .08)); },
+  buzz: () => tone(140, .45, "sawtooth", .08),
+};
+document.addEventListener("pointerdown", () => ac(), { once: true });
+
+/* =====================================================================
+   Confetti
+   ===================================================================== */
+function confetti(n = 160) {
+  const cv = $("#confetti"), cx = cv.getContext("2d"); const W = cv.width = innerWidth, H = cv.height = innerHeight;
+  const cols = ["#ffc93c", "#e8263f", "#3ddc97", "#7b8cff", "#ffffff", "#ff9b6a"];
+  const ps = Array.from({ length: n }, () => ({ x: W / 2 + (Math.random() - .5) * W * .3, y: H * .35, vx: (Math.random() - .5) * 14, vy: -Math.random() * 14 - 4, r: Math.random() * 6 + 4, a: Math.random() * 6, va: (Math.random() - .5) * .4, c: cols[Math.random() * cols.length | 0] }));
+  const t0 = performance.now();
+  (function fr(t) {
+    cx.clearRect(0, 0, W, H);
+    for (const p of ps) { p.vy += .35; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.a += p.va; cx.save(); cx.translate(p.x, p.y); cx.rotate(p.a); cx.fillStyle = p.c; cx.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); cx.restore(); }
+    if (t - t0 < 3500) requestAnimationFrame(fr); else cx.clearRect(0, 0, W, H);
+  })(t0);
+}
+
+/* =====================================================================
+   App state
+   ===================================================================== */
+const S = {
+  db: null, uid: null, room: null, data: null, loaded: false,
+  name: localStorage.getItem("asamade-name") || "",
+  sound: localStorage.getItem("asamade-sound") !== "0",
+  mine: { round: null, text: "" }, unsubRoom: null, unsubSecret: null, secretRound: null,
+  screen: null, presenceSet: false,
+  ui: { odaiMode: "random", pick: null, custom: "", draft: "", editing: false, sel: null, modal: null, busy: false },
+  seen: { round: null, keys: new Set(), counts: {} },
+  lastTick: null, allSubSince: null, advancing: false, autoRevealing: false,
+  online: true, everConnected: false, pending: 0,
+};
+let THEMES = [], LETTERS = [...DEFAULT_LETTERS];
+function loadOdai(j) {
+  if (Array.isArray(j)) { if (j.length) THEMES = j; return; }
+  if (j && Array.isArray(j.themes) && j.themes.length) THEMES = j.themes;
+  if (j && typeof j.letters === "string" && j.letters.trim()) LETTERS = [...j.letters.replace(/\s/g, "")];
+}
+try { loadOdai(JSON.parse($("#odai-data").textContent)); } catch { }
+
+function D() {
+  const d = S.data || {}, st = d.state || {}, meta = d.meta || {};
+  const players = d.players || {}, scores = d.scores || {};
+  const r = st.round || 0;
+  const submitted = (d.submitted || {})[r] || {};
+  const revealed = (d.revealed || {})[r] || {};
+  const req = (d.revealReq || {})[r] || {};
+  const isHost = !!meta.hostUid && meta.hostUid === S.uid;
+  const eligible = u => !(u === meta.hostUid && !st.hostPlays);
+  const online = Object.keys(players).filter(u => players[u] && players[u].online !== false);
+  return { d, st, meta, players, scores, r, submitted, revealed, req, isHost, eligible, online };
+}
+const nm = (x, u) => (x.players[u] && x.players[u].name) || "？？？";
+
+function groupsOf(rev) {
+  const rootOf = u => { let x = u, guard = 0; while (rev[x] && rev[x].sameAs && rev[rev[x].sameAs] && guard++ < 20) x = rev[x].sameAs; return x; };
+  const map = {};
+  const entries = Object.keys(rev).sort((a, b) => (rev[a].at || 0) - (rev[b].at || 0));
+  for (const u of entries) {
+    const root = rootOf(u);
+    if (!map[root]) map[root] = { root, text: rev[root].text, at: rev[root].at || 0, members: [] };
+    if (u === root) map[root].members.unshift(u); else map[root].members.push(u);
+  }
+  return Object.values(map).sort((a, b) => a.at - b.at);
+}
+function ranking(x) {
+  return Object.keys(x.players).map(u => ({ uid: u, name: nm(x, u), score: x.scores[u] || 0 }))
+    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, "ja"));
+}
+function rankWithPlace(list) { let place = 0, prev = null; return list.map((p, i) => { if (p.score !== prev) { place = i + 1; prev = p.score; } return { ...p, place }; }); }
+
+/* =====================================================================
+   Weak-network handling
+   Writes are applied locally at once and queued by the SDK until the
+   connection returns; we only count what is still waiting and tell the person.
+   ===================================================================== */
+function trackWrites(db) {
+  const wrap = fn => (...a) => {
+    S.pending++; netBanner();
+    const p = Promise.resolve(fn(...a));
+    p.catch(e => console.warn(e)).finally(() => { S.pending = Math.max(0, S.pending - 1); netBanner(); render(); });
+    return p;
+  };
+  return { ...db, set: wrap(db.set.bind(db)), update: wrap(db.update.bind(db)) };
+}
+let offTimer = null;
+function setOnline(on) {
+  clearTimeout(offTimer);
+  if (on) {
+    const was = S.online; S.online = true;
+    if (!was && S.everConnected) netBanner("back");
+    S.everConnected = true; netBanner(); render();
+  } else {
+    // brief drops are normal; only complain after 2.5s
+    offTimer = setTimeout(() => { S.online = false; netBanner(); render(); }, 2500);
+  }
+}
+function netBanner(kind) {
+  const el = $("#net"); if (!el) return;
+  clearTimeout(el._t);
+  if (kind === "back") {
+    el.className = "net ok show"; el.innerHTML = "✓ 電波が戻りました";
+    el._t = setTimeout(() => el.classList.remove("show"), 1800); return;
+  }
+  if (!S.online) {
+    el.className = "net show";
+    el.innerHTML = `<i></i>電波を探しています…${S.pending ? `（送信待ち ${S.pending}件）` : ""}`;
+  } else if (!el.classList.contains("ok")) el.classList.remove("show");
+}
+
+/* =====================================================================
+   Boot
+   ===================================================================== */
+async function boot() {
+  const useFirebase = FIREBASE_CONFIG.apiKey && !new URLSearchParams(location.search).has("demo");
+  S.screen = null;
+  if (location.protocol.startsWith("http") && "serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => { });
+  $("#app").innerHTML = `<div class="center-msg"><div class="thinking"><i></i><i></i><i></i></div><span id="boot-msg">接続中…</span></div>`;
+  const slow = setTimeout(() => { const m = $("#boot-msg"); if (m) m.innerHTML = "電波が弱いようです…<br>このまま待つか、電波の入る場所へ移動してください"; }, 8000);
+  try {
+    S.db = trackWrites(useFirebase ? await FirebaseDB(FIREBASE_CONFIG) : LocalDB());
+  } catch (e) {
+    console.error(e); clearTimeout(slow);
+    $("#app").innerHTML = `<div class="center-msg"><div style="font-size:44px">📶</div>サーバーに接続できませんでした。<br>電波の入る場所で再読み込みしてください。<button class="btn" onclick="location.reload()">再読み込み</button></div>`;
+    return;
+  }
+  clearTimeout(slow);
+  S.uid = S.db.uid;
+  S.db.onConnection(setOnline);
+  if (location.protocol.startsWith("http")) {
+    fetch("questions.json").then(r => r.ok ? r.json() : null).then(j => { if (j) { loadOdai(j); render(); } }).catch(() => { });
+  }
+  const code = (new URLSearchParams(location.search).get("r") || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
+  if (code) enterRoom(code); else render();
+  setInterval(tick, 250);
+}
+
+function enterRoom(code) {
+  S.room = code; S.loaded = false; S.data = null; S.presenceSet = false;
+  const u = new URL(location.href); u.searchParams.set("r", code); history.replaceState(null, "", u);
+  if (S.unsubRoom) S.unsubRoom();
+  S.unsubRoom = S.db.on(`rooms/${code}`, v => { S.data = v; S.loaded = true; onData(); });
+  render();
+}
+function leaveRoom() {
+  if (S.unsubRoom) S.unsubRoom(); if (S.unsubSecret) S.unsubSecret();
+  if (S.room && S.data && S.data.players && S.data.players[S.uid]) S.db.set(`rooms/${S.room}/players/${S.uid}/online`, false);
+  S.room = null; S.data = null; S.unsubRoom = null; S.unsubSecret = null; S.secretRound = null;
+  const u = new URL(location.href); u.searchParams.delete("r"); history.replaceState(null, "", u);
+  closeModal(); render();
+}
+function joinURL() { const u = new URL(location.href); u.search = ""; u.hash = ""; u.searchParams.set("r", S.room); if (S.db.mode === "demo") u.searchParams.set("demo", "1"); return u.toString(); }
+
+function onData() {
+  const x = D();
+  if (S.autoJoin) {
+    S.autoJoin = false;
+    if (S.data && S.data.meta && !x.players[S.uid] && S.name) {
+      S.db.set(`rooms/${S.room}/players/${S.uid}`, { name: S.name, joinedAt: S.db.now(), online: true });
+      return;
+    }
+  }
+  if (x.players[S.uid] && !S.presenceSet) { S.presenceSet = true; S.db.presence(`rooms/${S.room}/players/${S.uid}/online`); }
+  // subscribe own secret for the current round
+  if (x.players[S.uid] && x.r && S.secretRound !== x.r) {
+    if (S.unsubSecret) S.unsubSecret();
+    S.secretRound = x.r; const rr = x.r;
+    S.unsubSecret = S.db.on(`secrets/${S.room}/${rr}/${S.uid}`, v => { if (S.secretRound === rr) { S.mine = { round: rr, text: v || "" }; render(); } });
+  }
+  detectReveals(x);
+  hostAutomation(x);
+  participantAutomation(x);
+  render();
+}
+
+/* reveal flashes & sounds */
+function detectReveals(x) {
+  const ph = x.st.phase;
+  if (S.seen.round !== x.r) { S.seen = { round: x.r, keys: new Set(Object.keys(x.revealed)), counts: {}, init: true }; groupsOf(x.revealed).forEach(g => S.seen.counts[g.root] = g.members.length); return; }
+  if (ph !== "reveal") { Object.keys(x.revealed).forEach(k => S.seen.keys.add(k)); return; }
+  const fresh = Object.keys(x.revealed).filter(k => !S.seen.keys.has(k)).sort((a, b) => (x.revealed[a].at || 0) - (x.revealed[b].at || 0));
+  for (const k of fresh) {
+    S.seen.keys.add(k);
+    const e = x.revealed[k];
+    if (e.sameAs && x.revealed[e.sameAs]) {
+      const g = groupsOf(x.revealed).find(g => g.members.includes(k));
+      S.bump = g ? g.root : null; SFX.same();
+      toast(`${nm(x, k)}さん「同じ！」→ ${g ? g.text : ""}`);
+    } else {
+      SFX.pop(); flash(`${nm(x, k)}さんの回答`, e.text);
+      S.newCard = k;
+    }
+  }
+}
+function flash(who, text) {
+  const f = $("#flash");
+  f.innerHTML = `<div class="who">${esc(who)}</div><div class="flip"><span class="ft">${esc(text)}</span></div>`;
+  f.classList.add("show"); clearTimeout(f._t); f._t = setTimeout(() => f.classList.remove("show"), 1700);
+}
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("show"), 2200); }
+
+/* host-only automatic transitions */
+function hostAutomation(x) {
+  if (!x.isHost || S.advancing) return;
+  if (x.st.phase === "answering") {
+    const now = S.db.now();
+    const elig = x.online.filter(x.eligible);
+    const allSub = elig.length > 0 && elig.every(u => x.submitted[u]);
+    if (allSub) { if (!S.allSubSince) S.allSubSince = now; } else S.allSubSince = null;
+    if (now >= (x.st.deadline || 0) + 1500 || (S.allSubSince && now - S.allSubSince > 1200)) {
+      S.advancing = true; S.allSubSince = null;
+      S.db.update(`rooms/${S.room}/state`, { phase: "reveal", revealAt: now }).finally(() => S.advancing = false);
+    }
+  }
+}
+/* participant: answer when nominated, auto-submit at time up */
+function participantAutomation(x) {
+  if (x.st.phase === "reveal" && x.req[S.uid] && x.submitted[S.uid] && !x.revealed[S.uid] && S.mine.round === x.r && S.mine.text && !S.autoRevealing) {
+    S.autoRevealing = true;
+    S.db.set(`rooms/${S.room}/revealed/${x.r}/${S.uid}`, { text: S.mine.text, at: S.db.now() }).finally(() => S.autoRevealing = false);
+  }
+}
+
+function tick() {
+  if (!S.data) return;
+  const x = D();
+  if (x.st.phase === "answering") {
+    const left = Math.max(0, (x.st.deadline || 0) - S.db.now());
+    const sec = Math.ceil(left / 1000);
+    const tm = $(".timer");
+    if (tm) {
+      $(".js-sec").textContent = left > 0 ? sec : "終了";
+      const dur = (x.st.duration || 60) * 1000;
+      $(".timer .bar i").style.transform = `scaleX(${Math.min(1, left / dur)})`;
+      tm.classList.toggle("hurry", left > 0 && sec <= 5);
+      tm.classList.toggle("over", left <= 0);
+    }
+    if (left > 0 && sec <= 5 && S.lastTick !== sec) { S.lastTick = sec; SFX.tick(); }
+    // time up: auto-submit draft
+    if (left <= 0 && x.eligible(S.uid) && x.players[S.uid] && !x.submitted[S.uid] && S.ui.draft.trim() && !S.ui.autoSubmitted) {
+      S.ui.autoSubmitted = true; submitAnswer(true);
+    }
+    hostAutomation(x);
+  }
+}
+
+/* =====================================================================
+   Render
+   ===================================================================== */
+function screenKey() {
+  if (!S.room) return "home";
+  if (!S.loaded) return "loading";
+  if (!S.data || !S.data.meta) return "missing";
+  const x = D();
+  if (!x.players[S.uid]) return "join";
+  const ph = x.st.phase || "lobby";
+  if (ph === "lobby") return x.isHost ? "lobby-host" : "lobby-guest";
+  if (ph === "answering") return `answering:${x.r}:${x.eligible(S.uid) ? "p" : "w"}`;
+  if (ph === "reveal" || ph === "judge") return `board:${x.r}`;
+  if (ph === "result") return `result:${x.r}`;
+  if (ph === "final") return `final:${x.st.finalAt || 0}`;
+  return "loading";
+}
+function render() {
+  const k = screenKey();
+  if (k !== S.screen) { S.screen = k; mount(k); }
+  update(k);
+}
+function base(k) { return k.split(":")[0]; }
+
+function header() {
+  return `<header class="hdr">
+    <span class="room">ROOM<b>${esc(S.room)}</b>${S.db.mode === "demo" ? '<span class="demo">DEMO</span>' : ""}</span>
+    <span class="rnd" id="h-round"></span>
+    <span class="icons">
+      <button class="icon" data-act="invite" aria-label="参加者と招待">👥<small id="h-count"></small></button>
+      <button class="icon" data-act="rank" aria-label="ランキング">🏆</button>
+      <button class="icon" data-act="sound" id="h-snd" aria-label="サウンド">${S.sound ? "🔊" : "🔇"}</button>
+    </span></header>
+    <div class="mebar"><span id="h-me"></span><span id="h-score"></span></div>`;
+}
+function updateHeader(x) {
+  const hr = $("#h-round"); if (!hr) return;
+  hr.textContent = x.r ? `第${x.r}問` : "";
+  $("#h-count").textContent = x.online.length;
+  $("#h-me").innerHTML = `${esc(nm(x, S.uid))}${x.isHost ? '<span class="tag">主催者</span>' : ""}`;
+  $("#h-score").innerHTML = `正解 <b>${x.scores[S.uid] || 0}</b> 回`;
+}
+
+function mount(k) {
+  const app = $("#app"), b = base(k);
+  const demoNote = S.db && S.db.mode === "demo" ? `<div class="note demo-note">🧪 <b>デモモード</b>：Firebase未設定のため、この端末の同じブラウザのタブ同士でのみ同期します。複数タブで開いて動作確認できます。</div>` : "";
+  if (b === "loading") { app.innerHTML = `<div class="center-msg"><div class="thinking"><i></i><i></i><i></i></div>読み込み中…</div>`; return; }
+  if (b === "home") {
+    app.innerHTML = `<div class="screen">
+      <div class="logo"><div class="pre">クイズ！</div><h1>朝まで<em>それ正解</em></h1><p>みんなの答えの中から、主催者が“正解”を決める</p></div>
+      <div class="panel">
+        <label class="lb">ニックネーム</label>
+        <input class="tx" id="nm" maxlength="${MAX_NAME}" placeholder="例：たなか" value="${esc(S.name)}" autocomplete="off">
+        <button class="btn gold big" data-act="create">部屋をつくる（主催者）</button>
+        <div class="or">または参加</div>
+        <div class="row"><input class="tx code-in" id="code" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters"><button class="btn" data-act="join-code" style="flex:.6">参加する</button></div>
+      </div>${demoNote}</div>`;
+    return;
+  }
+  if (b === "missing") {
+    app.innerHTML = `<div class="center-msg"><div style="font-size:48px">🔍</div>部屋「${esc(S.room)}」が見つかりません。<br>コードを確認してください。<button class="btn" data-act="leave">トップへ戻る</button></div>`;
+    return;
+  }
+  if (b === "join") {
+    app.innerHTML = `<div class="screen">
+      <div class="logo"><div class="pre">クイズ！</div><h1>朝まで<em>それ正解</em></h1><p>ROOM <b style="color:var(--gold);font-family:var(--f-title);letter-spacing:.15em">${esc(S.room)}</b> に参加します</p></div>
+      <div class="panel">
+        <label class="lb">ニックネーム</label>
+        <input class="tx" id="nm" maxlength="${MAX_NAME}" placeholder="例：たなか" value="${esc(S.name)}" autocomplete="off">
+        <button class="btn gold big" data-act="join-room">参加する</button>
+        <button class="btn ghost small" data-act="leave">別の部屋に入る</button>
+      </div>${demoNote}</div>`;
+    return;
+  }
+  if (b === "lobby-host") {
+    if (!S.ui.pick) S.ui.pick = randomOdai();
+    if (S.ui.letter === undefined) S.ui.letter = randomLetter();
+    app.innerHTML = `<div class="screen">${header()}
+      <div class="seg" id="seg"><button data-act="mode" data-m="random">🎲 ランダム</button><button data-act="mode" data-m="custom">✍️ 自分で書く</button></div>
+      <div class="pick odai">
+        <div class="lt-row"><button class="letter" id="p-letter" data-act="letter-pick" aria-label="頭文字を選ぶ"></button><span class="de" id="p-de">で始まる、</span>
+          <button class="btn small" data-act="reroll-letter" style="margin-left:auto">🔀 文字</button></div>
+        <div id="p-random" style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px">
+          <div class="t" id="p-text"></div>
+          <div style="display:flex;align-items:center;gap:8px"><span class="cat" id="p-cat"></span><button class="btn small" data-act="reroll" style="margin-left:auto">🔀 テーマ</button></div></div>
+        <textarea class="tx" id="p-custom" maxlength="40" placeholder="例：かわいい生き物は？">${esc(S.ui.custom)}</textarea>
+      </div>
+      <div class="set">
+        <div class="set-row"><span>制限時間</span><span class="dur-in"><input type="number" id="dur-in" min="5" max="600" step="5" inputmode="numeric" aria-label="制限時間（秒）"><span>秒</span></span></div>
+        <div class="set-row"><span>参加者が自分で回答を公開できる</span><button class="tgl" data-act="tgl" data-k="allowSelf" id="t-allowSelf"></button></div>
+        <div class="set-row"><span>主催者も回答する</span><button class="tgl" data-act="tgl" data-k="hostPlays" id="t-hostPlays"></button></div>
+      </div>
+      <button class="pstrip" data-act="invite"><span class="cnt" id="ps-cnt"></span><span class="names" id="ps-names"></span><span class="btn small">招待QR</span></button>
+      <div class="row" style="flex:none">
+        <button class="btn" data-act="final" id="b-final" style="flex:.55">🏆 最終結果</button>
+        <button class="btn gold big" data-act="start">出題する！</button>
+      </div></div>`;
+    return;
+  }
+  if (b === "lobby-guest") {
+    app.innerHTML = `<div class="screen">${header()}
+      <div class="wait"><div class="moon">🌙</div><h2 id="w-title">次のお題を待っています</h2><p>主催者が準備中…<span class="thinking"><i></i><i></i><i></i></span></p></div>
+      <div class="last" id="w-last"></div>
+      <button class="pstrip" data-act="invite"><span class="cnt" id="ps-cnt"></span><span class="names" id="ps-names"></span><span class="btn small">招待QR</span></button>
+    </div>`;
+    return;
+  }
+  if (b === "answering") {
+    const x = D(); const part = x.eligible(S.uid);
+    S.ui.draft = ""; S.ui.editing = false; S.ui.autoSubmitted = false; S.lastTick = null; S.allSubSince = null;
+    SFX.start();
+    app.innerHTML = `<div class="screen">${header()}
+      <div class="timer"><div class="bar"><i></i></div><div class="sec js-sec"></div></div>
+      ${odaiHTML(x.st)}
+      ${part ? `
+      <div class="ans" id="a-input">
+        <textarea class="tx" id="ans" maxlength="${MAX_ANS}" placeholder="${x.st.letter ? `「${esc(x.st.letter)}」で始まる答え` : "答えをどうぞ"}" enterkeyhint="done"></textarea>
+        <div class="warn" id="a-warn" hidden>⚠「${esc(x.st.letter || "")}」で始まっていないかも？</div>
+        <div class="hint">🔒 公開されるまで他の人には見えません</div>
+        <button class="btn gold big" data-act="submit">回答する</button>
+      </div>
+      <div class="done" id="a-done" hidden>
+        <div class="ok">✓ 回答しました</div>
+        <div class="pend" id="a-pend" hidden>📶 電波待ち…戻り次第、自動で送信します</div>
+        <div class="flip win-flip" style="min-height:110px;--fs:34px;animation:none"><span class="ft" id="a-mine"></span></div>
+        <button class="btn small" data-act="edit" id="a-edit">✏️ 締切まで修正できます</button>
+      </div>
+      <div class="done" id="a-miss" hidden><div style="font-size:44px">⏰</div><div>時間切れ…今回は回答なし</div></div>`
+      : `<div class="done"><div style="font-size:42px">🎤</div><div class="ok" style="color:var(--ink)">みんなが回答中です</div><div class="note">主催者は回答しません（ロビーで変更できます）</div></div>`}
+      <div class="progress"><div class="lbl"><span>回答状況</span><span><b id="pg-n"></b></span></div><div class="dots" id="pg-dots"></div></div>
+      ${x.isHost ? `<div class="hostbar"><button class="btn" data-act="plus">＋15秒</button><button class="btn red" data-act="close">締め切る</button></div>` : ""}
+    </div>`;
+    const ta = $("#ans");
+    if (ta) {
+      ta.addEventListener("input", () => { S.ui.draft = ta.value; $("#a-warn").hidden = !letterMismatch(ta.value, x.st.letter); });
+      ta.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); submitAnswer(); } });
+    }
+    tick();
+    return;
+  }
+  if (b === "board") {
+    S.ui.sel = null;
+    app.innerHTML = `<div class="screen">${header()}
+      <div id="b-odai"></div>
+      <div class="bstat"><span id="b-stat"></span><span id="b-phase"></span></div>
+      <div class="board" id="board"></div>
+      <div class="dock" id="dock"></div></div>`;
+    return;
+  }
+  if (b === "result") { mountResult(); return; }
+  if (b === "final") { mountFinal(); return; }
+}
+
+function update(k) {
+  const b = base(k);
+  if (!S.data || ["home", "missing", "join", "loading"].includes(b)) return;
+  const x = D();
+  updateHeader(x);
+  const pc = $("#ps-cnt");
+  if (pc) {
+    pc.innerHTML = `${x.online.length}<small>人</small>`;
+    $("#ps-names").textContent = x.online.map(u => nm(x, u)).join("・");
+  }
+  if (b === "lobby-host") {
+    $("#seg").querySelectorAll("button").forEach(bt => bt.classList.toggle("on", bt.dataset.m === S.ui.odaiMode));
+    $("#p-random").hidden = S.ui.odaiMode !== "random"; $("#p-custom").hidden = S.ui.odaiMode !== "custom";
+    const p = S.ui.pick;
+    $("#p-cat").textContent = p ? p.cat || "お題" : "お題"; $("#p-text").textContent = p ? p.text : "お題データがありません";
+    const pl = $("#p-letter"); pl.textContent = S.ui.letter || "なし"; pl.classList.toggle("none", !S.ui.letter);
+    $("#p-de").textContent = S.ui.letter ? "で始まる、" : "（頭文字なし）";
+    const di = $("#dur-in"); if (document.activeElement !== di) di.value = x.st.duration || 60;
+    $("#t-allowSelf").classList.toggle("on", x.st.allowSelf !== false);
+    $("#t-hostPlays").classList.toggle("on", !!x.st.hostPlays);
+    $("#b-final").disabled = !x.r;
+  }
+  if (b === "lobby-guest") {
+    const h = x.st.lastResult;
+    $("#w-last").innerHTML = h ? (h.text ? `前回の正解：<b>${esc(h.text)}</b>（${h.members.length}人）` : "前回は正解なし") : "";
+  }
+  if (b === "answering") updateAnswering(x);
+  if (b === "board") updateBoard(x);
+  if (b === "result") updateResult(x);
+}
+
+/* ---------- answering ---------- */
+function updateAnswering(x) {
+  const elig = Object.keys(x.players).filter(u => x.eligible(u) && (x.players[u].online !== false || x.submitted[u]));
+  const n = elig.filter(u => x.submitted[u]).length;
+  $("#pg-n").textContent = `${n} / ${elig.length}`;
+  $("#pg-dots").innerHTML = elig.map(u => `<span class="${x.submitted[u] ? "y" : ""}">${x.submitted[u] ? "✓ " : ""}${esc(nm(x, u))}</span>`).join("");
+  if (!x.eligible(S.uid)) return;
+  const sub = !!x.submitted[S.uid];
+  const over = S.db.now() >= (x.st.deadline || 0);
+  const showInput = (!sub || S.ui.editing) && !over;
+  $("#a-input").hidden = !showInput;
+  $("#a-done").hidden = !(sub && !showInput);
+  $("#a-miss").hidden = !(!sub && over);
+  if (sub) { $("#a-mine").textContent = S.mine.round === x.r ? S.mine.text : "…"; $("#a-edit").hidden = over; $("#a-pend").hidden = !(S.pending && !S.online); }
+}
+
+/* ---------- board (reveal & judge) ---------- */
+function updateBoard(x) {
+  const ph = x.st.phase, judging = ph === "judge";
+  const bo = $("#b-odai"); const oh = odaiHTML(x.st, true); if (bo._h !== oh) { bo.innerHTML = oh; bo._h = oh; }
+  const subs = Object.keys(x.submitted);
+  const revCount = subs.filter(u => x.revealed[u]).length;
+  const allRev = subs.length > 0 && revCount === subs.length;
+  $("#b-stat").innerHTML = `公開 <b>${revCount} / ${subs.length}</b>`;
+  $("#b-phase").innerHTML = judging ? `<span style="color:var(--red)">● 正解ジャッジ中</span>` : (allRev ? `<span style="color:var(--ok)">全員公開！</span>` : "");
+  const gs = groupsOf(x.revealed);
+  const board = $("#board");
+  if (!gs.length) {
+    board.className = "board-empty"; board.innerHTML = subs.length ? "公開された回答はまだありません<br>主催者の指名を待とう！" : "回答した人がいませんでした";
+  } else {
+    board.className = "board";
+    const myGroup = gs.find(g => g.members.includes(S.uid));
+    board.innerHTML = gs.map(g => {
+      const cls = ["flip"]; if (myGroup && myGroup.root === g.root) cls.push("mine"); if (S.ui.sel === g.root) cls.push("sel");
+      if (S.newCard === g.root) cls.push("new"); if (S.bump === g.root) cls.push("bump");
+      return `<button class="${cls.join(" ")}" data-act="card" data-root="${esc(g.root)}"><span class="fc">${g.members.length}人</span><span class="ft">${esc(g.text)}</span><span class="fn">${g.members.map(u => esc(nm(x, u))).join("・")}</span></button>`;
+    }).join("");
+    S.newCard = null; S.bump = null;
+    fitBoard();
+  }
+  // dock
+  const dock = $("#dock"); let h = "";
+  const meSub = !!x.submitted[S.uid], meRev = x.revealed[S.uid];
+  const mineText = S.mine.round === x.r ? S.mine.text : "";
+  if (x.eligible(S.uid) && !judging) {
+    if (meSub && !meRev) {
+      h += `<div class="mine-line"><span>あなた</span><div class="flip"><span class="ft">${esc(mineText || "…")}</span></div>${x.st.allowSelf !== false ? `<button class="btn gold small" data-act="self-reveal">公開する</button>` : ""}</div>`;
+      if (!x.isHost) h += `<div class="msg">同じ答えのカードがあれば<b>タップして「同じ！」</b>${x.st.allowSelf !== false ? "" : "／主催者の指名を待とう"}</div>`;
+    } else if (meRev && !x.isHost) {
+      const g = gs.find(g => g.members.includes(S.uid));
+      h += `<div class="msg">✓ 公開済み：<b>${esc(meRev.text)}</b>${meRev.sameAs && g ? `<br>（「${esc(g.text)}」と同じ）` : ""}</div>`;
+    } else if (!meSub && !x.isHost) {
+      h += `<div class="msg">今回は回答なし。みんなの答えを見守ろう！</div>`;
+    }
+  }
+  if (x.isHost) {
+    if (!judging) {
+      const un = subs.filter(u => !x.revealed[u]);
+      if (un.length) {
+        h += `<div class="nom">${un.map(u => `<button class="${x.req[u] ? "req" : ""}" data-act="nominate" data-u="${esc(u)}">${x.req[u] ? "⏳" : "👉"} ${esc(nm(x, u))}</button>`).join("")}</div>`;
+        h += `<div class="row"><button class="btn small" data-act="nominate-rand">🎲 ランダム指名</button><button class="btn small ${allRev ? "gold" : ""}" data-act="to-judge">正解を決める →</button></div>`;
+      } else if (subs.length) {
+        h += `<button class="btn gold big" data-act="to-judge">正解を決める！</button>`;
+      } else {
+        h += `<button class="btn" data-act="next">ロビーに戻る</button>`;
+      }
+    } else {
+      h += `<div class="msg">正解のカードを<b>タップ</b>して選んでください</div>
+        <div class="row"><button class="btn small" data-act="back-reveal" style="flex:.5">← 戻る</button><button class="btn small" data-act="decide-none" style="flex:.6">正解なし</button><button class="btn red" data-act="decide" ${S.ui.sel ? "" : "disabled"}>これが正解！</button></div>`;
+    }
+  } else if (judging) {
+    h += `<div class="msg" style="font-size:15px">主催者が正解を選んでいます<span class="thinking"><i></i><i></i><i></i></span></div>`;
+  }
+  dock.innerHTML = h;
+  dock.hidden = !h;
+}
+function fitBoard() {
+  const b = $("#board"); if (!b || !b.classList.contains("board")) return;
+  const n = b.children.length; if (!n) return;
+  const W = b.clientWidth, H = b.clientHeight, gap = 8;
+  let best = null;
+  for (let cols = 1; cols <= 4; cols++) {
+    const rows = Math.ceil(n / cols), cw = (W - gap * (cols - 1)) / cols, ch = Math.min(150, (H - gap * (rows - 1)) / rows);
+    const fs = Math.max(11, Math.min(ch * .27, cw / 6.5, 30));
+    const score = fs - (ch < 38 ? 100 : 0);
+    if (!best || score > best.score) best = { cols, rows, fs, ch, score };
+  }
+  b.style.gridTemplateColumns = `repeat(${best.cols},minmax(0,1fr))`;
+  b.style.gridTemplateRows = `repeat(${best.rows},${Math.floor(best.ch)}px)`;
+  b.style.setProperty("--fs", best.fs.toFixed(1) + "px");
+  b.classList.toggle("compact", best.ch < 64);
+}
+addEventListener("resize", () => fitBoard());
+
+/* ---------- result ---------- */
+function mountResult() {
+  const x = D(); const res = x.st.result || {};
+  const elapsed = S.db.now() - (res.at || 0);
+  const DRUM = 0; // no build-up: the answer appears the moment it is decided
+  $("#app").innerHTML = `<div class="screen">${header()}
+    ${odaiHTML(x.st, true)}
+    <div class="res">
+      <div id="r-body" hidden style="width:100%;display:flex;flex-direction:column;gap:12px;align-items:center"></div>
+    </div>
+    <div class="minirank" id="r-rank" hidden></div>
+    ${x.isHost ? `<div class="hostbar" id="r-host" hidden><button class="btn" data-act="final" style="flex:.6">🏆 最終結果</button><button class="btn gold big" data-act="next">次のお題へ →</button></div>` : ""}
+  </div>`;
+  const showBody = () => {
+    const y = D(); const r2 = y.st.result || {};
+    const body = $("#r-body"); body.hidden = false;
+    if (r2.root) {
+      const iWon = (r2.members || []).includes(S.uid);
+      body.innerHTML = `<div class="flip win-flip"><span class="ft">${esc(r2.text)}</span><div class="stamp">正解</div></div>
+        <div class="winners fade-in" style="animation-delay:.6s">正解者 <b>${r2.members.length}人</b><span class="pt">+1</span><br>${r2.members.map(u => esc(nm(y, u))).join("・")}</div>
+        ${y.eligible(S.uid) && y.submitted[S.uid] ? `<div class="myres ${iWon ? "yes" : "no"} fade-in" style="animation-delay:.9s">${iWon ? "🎉 あなた正解！" : "残念…！"}</div>` : ""}`;
+      if (elapsed < DRUM + 1500) { SFX.ding(); confetti(); if (iWon && navigator.vibrate) navigator.vibrate([80, 40, 80, 40, 220]); }
+    } else {
+      body.innerHTML = `<div class="none-x">今回は<br>正解なし！</div>`;
+      if (elapsed < DRUM + 1500) SFX.buzz();
+    }
+    setTimeout(() => { const rk = $("#r-rank"); if (rk) { rk.hidden = false; rk.classList.add("fade-in"); } const hb = $("#r-host"); if (hb) hb.hidden = false; updateResult(D()); }, elapsed > DRUM + 1500 ? 0 : 900);
+  };
+  showBody();
+}
+function updateResult(x) {
+  const rk = $("#r-rank"); if (!rk || rk.hidden) return;
+  const list = rankWithPlace(ranking(x)).slice(0, 3);
+  rk.innerHTML = list.map(p => `<div class="rk ${p.uid === S.uid ? "me" : ""}"><span class="n">${p.place}</span><span class="nm">${esc(p.name)}</span><span class="sc">${p.score}</span></div>`).join("");
+}
+
+/* ---------- final ---------- */
+function mountFinal() {
+  const x = D(); const elapsed = S.db.now() - (x.st.finalAt || 0);
+  const list = rankWithPlace(ranking(x));
+  const byPlace = p => list.filter(q => q.place === p && q.score > 0);
+  const names = ps => ps.length > 3 ? ps.slice(0, 2).map(p => esc(p.name)).join("・") + ` 他${ps.length - 2}人` : ps.map(p => esc(p.name)).join("・");
+  const top = [1, 2, 3].map(p => byPlace(p));
+  const rest = list.filter(p => p.place > 3 || (p.score === 0 && p.place <= 3)).slice(0, 6);
+  const pod = (i, cls, medal) => {
+    const ps = top[i]; if (!ps.length) return `<div class="pod ${cls}"><div class="col" style="opacity:.25"></div></div>`;
+    return `<div class="pod ${cls}">${i === 0 ? '<div class="crown">👑</div>' : ""}<div class="who">${names(ps)}</div><div class="sc">正解 ${ps[0].score} 回</div><div class="col">${medal}</div></div>`;
+  };
+  $("#app").innerHTML = `<div class="screen">${header()}
+    <div class="res" style="justify-content:flex-start;padding-top:6px;gap:16px">
+      <div class="final-h">🏆 最終結果発表</div>
+      <div class="podium">${pod(1, "p2", "2")}${pod(0, "p1", "1")}${pod(2, "p3", "3")}</div>
+      <div class="minirank" id="f-rest" style="opacity:0;transition:opacity .6s">${rest.map(p => `<div class="rk ${p.uid === S.uid ? "me" : ""}"><span class="n">${p.place}</span><span class="nm">${esc(p.name)}</span><span class="sc">${p.score}</span></div>`).join("")}</div>
+    </div>
+    ${x.isHost ? `<div class="hostbar"><button class="btn gold" data-act="next">ゲームを続ける</button></div>` : ""}
+  </div>`;
+  const steps = [[".pod.p3", 900], [".pod.p2", 2300], [".pod.p1", 4200]];
+  const fast = elapsed > 5000;
+  if (!fast) SFX.drum();
+  steps.forEach(([sel, t], i) => setTimeout(() => {
+    const el = $(sel); if (el) el.classList.add("show");
+    if (!fast) { if (i === 2) { SFX.ding(); confetti(220); } else SFX.pop(); }
+  }, fast ? 0 : Math.max(0, t - elapsed)));
+  setTimeout(() => { const r = $("#f-rest"); if (r) r.style.opacity = 1; }, fast ? 0 : 4800);
+}
+
+/* =====================================================================
+   Actions
+   ===================================================================== */
+function randomOdai(exclude) {
+  if (!THEMES.length) return null;
+  const used = new Set(((S.data || {}).state || {}).used || []);
+  let pool = THEMES.filter(o => !used.has(o.id) && (!exclude || o.id !== exclude.id));
+  if (!pool.length) pool = THEMES.filter(o => !exclude || o.id !== exclude.id);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+function randomLetter(exclude) {
+  const pool = LETTERS.filter(l => l !== exclude);
+  return pool[Math.floor(Math.random() * pool.length)] || "あ";
+}
+function odaiHTML(st, mini) {
+  const theme = st.theme || st.odai || "", l = st.letter;
+  if (mini) return `<div class="odai mini">${l ? `<span class="letter sm">${esc(l)}</span><span class="de">で始まる、</span>` : ""}<div class="t">${esc(theme)}</div></div>`;
+  return `<div class="odai"><div class="q">第${st.round || ""}問</div>
+    ${l ? `<div class="lt-row" style="margin-top:6px"><span class="letter">${esc(l)}</span><span class="de">で始まる、</span></div>` : ""}
+    <div class="t">${esc(theme)}</div></div>`;
+}
+function kanaBase(ch) {
+  let c = (ch || "").normalize("NFD").replace(/[゙゚]/g, "").charAt(0);
+  const code = c.charCodeAt(0);
+  if (code >= 0x30A1 && code <= 0x30F6) c = String.fromCharCode(code - 0x60);
+  const small = { "ぁ": "あ", "ぃ": "い", "ぅ": "う", "ぇ": "え", "ぉ": "お", "ゃ": "や", "ゅ": "ゆ", "ょ": "よ", "っ": "つ", "ゎ": "わ", "ゔ": "う" };
+  return small[c] || c;
+}
+// soft check only: kanji / alphabet can't be judged, so only flag a kana that clearly differs
+function letterMismatch(ans, letter) {
+  if (!letter) return false;
+  const c = (ans || "").trim().charAt(0);
+  if (!c || !/[ぁ-ゖァ-ヺ]/.test(c)) return false;
+  return kanaBase(c) !== kanaBase(letter);
+}
+function readDuration() {
+  const el = $("#dur-in"); const cur = (D().st.duration || 60);
+  if (!el) return cur;
+  const v = Math.round(Number(el.value));
+  if (!Number.isFinite(v) || v < 5 || v > 600) { toast("制限時間は5〜600秒で入力してください"); el.value = cur; return null; }
+  el.value = v; return v;
+}
+function readName() {
+  const v = ($("#nm") ? $("#nm").value : "").trim().slice(0, MAX_NAME);
+  if (!v) { toast("ニックネームを入れてください"); $("#nm") && $("#nm").focus(); return null; }
+  S.name = v; localStorage.setItem("asamade-name", v); return v;
+}
+async function submitAnswer(auto) {
+  const x = D();
+  const t = (S.ui.draft || "").trim().slice(0, MAX_ANS);
+  if (!t) { if (!auto) toast("答えを書いてください"); return; }
+  if (!auto && S.db.now() >= (x.st.deadline || 0)) { toast("時間切れです"); return; }
+  document.activeElement && document.activeElement.blur && document.activeElement.blur();
+  S.mine = { round: x.r, text: t }; S.ui.editing = false;
+  // fire both without waiting: on a weak connection they queue and send when it returns
+  S.db.set(`secrets/${S.room}/${x.r}/${S.uid}`, t);
+  S.db.set(`rooms/${S.room}/submitted/${x.r}/${S.uid}`, true);
+  render();
+}
+
+const ACT = {
+  async create() {
+    const name = readName(); if (!name || S.ui.busy) return; S.ui.busy = true;
+    try {
+      let code;
+      const timeout = () => new Promise((_, ng) => setTimeout(() => ng(new Error("timeout")), 12000));
+      for (let i = 0; i < 12; i++) { code = genCode(); if (!(await Promise.race([S.db.get(`rooms/${code}/meta`), timeout()]))) break; }
+      const now = S.db.now();
+      await S.db.set(`rooms/${code}/meta`, { hostUid: S.uid, createdAt: now });
+      await S.db.set(`rooms/${code}/state`, { phase: "lobby", round: 0, duration: 60, allowSelf: true, hostPlays: false });
+      await S.db.set(`rooms/${code}/players/${S.uid}`, { name, joinedAt: now, online: true });
+      enterRoom(code);
+    } catch (e) { console.error(e); toast("部屋を作れませんでした。電波の入る場所で試してください"); }
+    S.ui.busy = false;
+  },
+  "join-code"() {
+    if (!readName()) return;
+    const code = ($("#code").value || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (code.length !== 4) { toast("4文字の部屋コードを入れてください"); return; }
+    S.autoJoin = true; enterRoom(code);
+  },
+  async "join-room"() {
+    const name = readName(); if (!name) return;
+    await S.db.set(`rooms/${S.room}/players/${S.uid}`, { name, joinedAt: S.db.now(), online: true });
+  },
+  leave() { leaveRoom(); },
+  mode(el) { S.ui.odaiMode = el.dataset.m; render(); if (S.ui.odaiMode === "custom") setTimeout(() => $("#p-custom").focus(), 50); },
+  reroll() { S.ui.pick = randomOdai(S.ui.pick); render(); const t = $("#p-random"); t.classList.remove("fade-in"); void t.offsetWidth; t.classList.add("fade-in"); },
+  dur() { const v = readDuration(); if (v) S.db.update(`rooms/${S.room}/state`, { duration: v }); },
+  tgl(el) { const x = D(); const k = el.dataset.k; const cur = k === "allowSelf" ? x.st.allowSelf !== false : !!x.st.hostPlays; S.db.update(`rooms/${S.room}/state`, { [k]: !cur }); },
+  async start() {
+    const x = D();
+    let theme, id = null;
+    if (S.ui.odaiMode === "custom") { theme = ($("#p-custom").value || "").trim(); S.ui.custom = theme; if (!theme) { toast("お題を書いてください"); return; } }
+    else { if (!S.ui.pick) { toast("お題がありません"); return; } theme = S.ui.pick.text; id = S.ui.pick.id; }
+    const letter = S.ui.letter || "";
+    const odai = letter ? `「${letter}」で始まる、${theme}` : theme;
+    const used = (x.st.used || []).slice(); if (id != null) used.push(id);
+    const dur = readDuration(); if (!dur) return;
+    const now = S.db.now();
+    await S.db.update(`rooms/${S.room}/state`, { phase: "answering", round: (x.st.round || 0) + 1, duration: dur, odai, letter, theme, deadline: now + dur * 1000, startedAt: now, used, result: null });
+    S.ui.pick = null; S.ui.custom = ""; S.ui.letter = undefined;
+  },
+  "reroll-letter"() { S.ui.letter = randomLetter(S.ui.letter); render(); const l = $("#p-letter"); l.classList.remove("new"); void l.offsetWidth; l.style.animation = "none"; void l.offsetWidth; l.style.animation = "pop .4s cubic-bezier(.2,1.6,.4,1)"; },
+  "letter-pick"() {
+    const cells = [...GOJUON].map(c => c === "　" ? `<button class="blank" tabindex="-1"></button>` : `<button data-act="letter-set" data-l="${c}" class="${c === S.ui.letter ? "on" : ""}">${c}</button>`).join("");
+    openModal(`<h3>頭文字を選ぶ</h3><div class="kgrid">${cells}</div>
+      <div class="row"><button class="btn small" data-act="letter-set" data-l="">頭文字なし</button><button class="btn small" data-act="letter-set" data-l="*">🎲 ランダム</button></div>`);
+  },
+  "letter-set"(el) { const l = el.dataset.l; S.ui.letter = l === "*" ? randomLetter(S.ui.letter) : l; closeModal(); render(); },
+  submit() { submitAnswer(); },
+  edit() { S.ui.editing = true; render(); const ta = $("#ans"); if (ta) { ta.value = S.mine.text; S.ui.draft = ta.value; ta.focus(); $("#a-warn").hidden = !letterMismatch(ta.value, D().st.letter); } },
+  plus() { const x = D(); S.db.update(`rooms/${S.room}/state`, { deadline: Math.max(x.st.deadline || 0, S.db.now()) + 15000 }); },
+  close() { if (!confirm("回答を締め切りますか？")) return; S.db.update(`rooms/${S.room}/state`, { deadline: S.db.now() }); },
+  "self-reveal"() {
+    const x = D(); if (!S.mine.text || S.mine.round !== x.r) return;
+    S.db.set(`rooms/${S.room}/revealed/${x.r}/${S.uid}`, { text: S.mine.text, at: S.db.now() });
+  },
+  card(el) {
+    const x = D(); const root = el.dataset.root;
+    if (x.st.phase === "judge" && x.isHost) { S.ui.sel = S.ui.sel === root ? null : root; render(); return; }
+    if (x.st.phase !== "reveal") return;
+    if (!x.eligible(S.uid) || !x.submitted[S.uid] || x.revealed[S.uid]) return;
+    const g = groupsOf(x.revealed).find(g => g.root === root); if (!g) return;
+    openModal(`<h3>「同じ！」で公表する？</h3>
+      <div class="flip" style="--fs:28px;min-height:80px"><span class="ft">${esc(g.text)}</span></div>
+      <div class="note">あなたの回答：<b style="color:var(--ink);font-family:var(--f-hand);font-size:18px;font-weight:400">${esc(S.mine.text)}</b></div>
+      <div class="row"><button class="btn" data-act="close-modal">やめる</button><button class="btn gold" data-act="same" data-root="${esc(root)}">同じ！</button></div>`);
+  },
+  same(el) {
+    const x = D(); closeModal();
+    if (!S.mine.text || x.revealed[S.uid]) return;
+    S.db.set(`rooms/${S.room}/revealed/${x.r}/${S.uid}`, { text: S.mine.text, at: S.db.now(), sameAs: el.dataset.root });
+  },
+  nominate(el) { const x = D(); S.db.set(`rooms/${S.room}/revealReq/${x.r}/${el.dataset.u}`, S.db.now()); },
+  "nominate-rand"() {
+    const x = D(); const un = Object.keys(x.submitted).filter(u => !x.revealed[u] && !x.req[u]);
+    const pool = un.length ? un : Object.keys(x.submitted).filter(u => !x.revealed[u]);
+    if (!pool.length) return;
+    const u = pool[Math.floor(Math.random() * pool.length)];
+    S.db.set(`rooms/${S.room}/revealReq/${x.r}/${u}`, S.db.now()); toast(`🎲 ${nm(x, u)}さんを指名！`);
+  },
+  "to-judge"() {
+    const x = D(); const subs = Object.keys(x.submitted); const left = subs.filter(u => !x.revealed[u]).length;
+    if (left && !confirm(`まだ${left}人が未公開です。このまま正解を決めますか？`)) return;
+    S.db.update(`rooms/${S.room}/state`, { phase: "judge" });
+  },
+  "back-reveal"() { S.db.update(`rooms/${S.room}/state`, { phase: "reveal" }); },
+  decide() { decide(S.ui.sel); },
+  "decide-none"() { if (confirm("今回は「正解なし」にしますか？")) decide(null); },
+  next() { S.db.update(`rooms/${S.room}/state`, { phase: "lobby" }); },
+  final() { if (!confirm("最終結果を全員に発表しますか？")) return; S.db.update(`rooms/${S.room}/state`, { phase: "final", finalAt: S.db.now() }); },
+  invite() { openInvite(); },
+  rank() { openRank(); },
+  sound() { S.sound = !S.sound; localStorage.setItem("asamade-sound", S.sound ? "1" : "0"); const b = $("#h-snd"); if (b) b.textContent = S.sound ? "🔊" : "🔇"; if (S.sound) SFX.pop(); },
+  "close-modal"() { closeModal(); },
+  kick(el) { const x = D(); if (!confirm(`${nm(x, el.dataset.u)}さんを退出させますか？`)) return; S.db.set(`rooms/${S.room}/players/${el.dataset.u}`, null); closeModal(); },
+  "leave-room"() { if (confirm("この部屋から退出しますか？")) leaveRoom(); },
+  "copy-url"() { navigator.clipboard && navigator.clipboard.writeText(joinURL()).then(() => toast("URLをコピーしました")); },
+  "open-tab"() { window.open(joinURL(), "_blank"); },
+};
+async function decide(root) {
+  const x = D();
+  const g = root ? groupsOf(x.revealed).find(g => g.root === root) : null;
+  const now = S.db.now();
+  const result = g ? { root: g.root, text: g.text, members: g.members, at: now } : { root: null, text: null, members: [], at: now };
+  const up = { "state/phase": "result", "state/result": result, "state/lastResult": { text: result.text, members: result.members }, [`history/${x.r}`]: { odai: x.st.odai, text: result.text, members: result.members } };
+  if (g) for (const u of g.members) up[`scores/${u}`] = (x.scores[u] || 0) + 1;
+  await S.db.update(`rooms/${S.room}`, up);
+}
+
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]"); if (!el) return;
+  const f = ACT[el.dataset.act]; if (f) { e.preventDefault(); f(el); }
+});
+document.addEventListener("keydown", e => {
+  if (e.key !== "Enter" || e.isComposing) return;
+  if (e.target.id === "code" || (e.target.id === "nm" && S.screen === "home")) { e.preventDefault(); ACT[(e.target.id === "code") ? "join-code" : "create"](); }
+  else if (e.target.id === "nm") { e.preventDefault(); ACT["join-room"](); }
+});
+document.addEventListener("input", e => { if (e.target.id === "p-custom") S.ui.custom = e.target.value; });
+document.addEventListener("change", e => { if (e.target.id === "dur-in") ACT.dur(); });
+
+/* ---------- modals ---------- */
+function openModal(html) {
+  $("#modal-root").innerHTML = `<div class="ovl" data-ovl><div class="modal">${html}</div></div>`;
+  $("#modal-root .ovl").addEventListener("click", e => { if (e.target.hasAttribute("data-ovl")) closeModal(); });
+}
+function closeModal() { $("#modal-root").innerHTML = ""; S.ui.modal = null; }
+let qrLib = null;
+async function qrSVG(text) {
+  try {
+    if (!window.qrcode) { if (!qrLib) qrLib = loadScript("https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"); await qrLib; }
+    const q = qrcode(0, "M"); q.addData(text); q.make();
+    return q.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+  } catch { return `<div style="color:#333;font-size:12px;text-align:center">QRを表示できません<br>URLを共有してください</div>`; }
+}
+async function openInvite() {
+  const x = D(); const url = joinURL();
+  const list = Object.keys(x.players).sort((a, b) => (x.players[a].joinedAt || 0) - (x.players[b].joinedAt || 0));
+  openModal(`<h3>スマホで読み取って参加</h3>
+    <div class="qr" id="qr"><div class="thinking"><i></i><i></i><i></i></div></div>
+    <div class="bigcode">${esc(S.room)}</div>
+    <div class="url">${esc(url)}</div>
+    <div class="row"><button class="btn small" data-act="copy-url">🔗 URLをコピー</button>${S.db.mode === "demo" ? `<button class="btn small" data-act="open-tab">＋ 新しいタブで参加</button>` : ""}</div>
+    <div class="scroll" style="max-height:24dvh">${list.map(u => `<div class="plist"><span class="st ${x.players[u].online === false ? "off" : ""}"></span><span class="n">${esc(nm(x, u))}${u === x.meta.hostUid ? '<span class="tag">主催者</span>' : ""}${u === S.uid ? "（あなた）" : ""}</span>${x.isHost && u !== S.uid ? `<button data-act="kick" data-u="${esc(u)}">退出させる</button>` : ""}</div>`).join("")}</div>
+    <div class="row"><button class="btn small ghost" data-act="leave-room">部屋を出る</button><button class="btn small" data-act="close-modal">閉じる</button></div>`);
+  const svg = await qrSVG(url); const q = $("#qr"); if (q) q.innerHTML = svg;
+}
+function openRank() {
+  const x = D(); const list = rankWithPlace(ranking(x));
+  openModal(`<h3>🏆 ランキング</h3><div class="note">正解に選ばれた回数</div>
+    <div class="scroll">${list.map(p => `<div class="rk ${p.uid === S.uid ? "me" : ""}"><span class="n">${p.place}</span><span class="nm">${esc(p.name)}</span><span class="sc">${p.score}</span></div>`).join("")}</div>
+    <button class="btn" data-act="close-modal">閉じる</button>`);
+}
+
+boot();
+</script>
+</body>
+</html>
